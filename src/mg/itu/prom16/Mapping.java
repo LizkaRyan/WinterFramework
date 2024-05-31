@@ -1,16 +1,16 @@
 package mg.itu.prom16;
 
 public class Mapping {
-    String classe;
+    Class<?> classe;
     String methodName;
-    public Mapping(String classe,String methodName){
+    public Mapping(Class<?> classe,String methodName){
         this.setClasse(classe);
         this.setMethodName(methodName);
     }
-    public String getClasse() {
+    public Class<?> getClasse() {
         return classe;
     }
-    public void setClasse(String classe) {
+    public void setClasse(Class<?> classe) {
         this.classe = classe;
     }
     public String getMethodName() {
