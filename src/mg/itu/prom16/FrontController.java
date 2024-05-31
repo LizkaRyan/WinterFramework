@@ -8,6 +8,7 @@ import java.util.List;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -51,7 +52,7 @@ public class FrontController extends HttpServlet{
                     for(File file : files){
                         if(file.isFile() && file.getName().endsWith(".class")){
                             String className = this.pack + '.' + file.getName().replace(".class","");
-                            Class clazz=Class.forName(className);
+                            Class<?> clazz=Class.forName(className);
                             if(clazz.isAnnotationPresent(AnnotationController.class)){
                                 classes.add(clazz);
                             }
@@ -70,7 +71,7 @@ public class FrontController extends HttpServlet{
             for(int e=0;e<methods.length;e++){
                 //System.out.println(methods[i].getName()+" "+methods[i].isAnnotationPresent(GetUrl.class));
                 if(methods[e].isAnnotationPresent(GetUrl.class)){
-                    Mapping mapping = new Mapping(classes.get(i).getSimpleName(),methods[e].getName());
+                    Mapping mapping = new Mapping(classes.get(i),methods[e].getName());
                     GetUrl annotation = methods[e].getAnnotation(GetUrl.class);
                     valiny.put(annotation.url(),mapping);
                 }
@@ -94,8 +95,15 @@ public class FrontController extends HttpServlet{
             String url = getRequest(request.getRequestURI());
             Mapping mapping = hashMap.get(url);
             if(mapping!=null){
-                out.println("<p>Controller: "+mapping.getClasse()+"</p>");
-                out.println("<p>Method: "+mapping.getMethodName()+"</p>");
+                try {
+                    Constructor<?> constructeur=mapping.getClasse().getConstructor();
+                    Method method=mapping.getClasse().getMethod(mapping.getMethodName());
+                    Object obj=constructeur.newInstance();
+                    String methodReturn=(String)method.invoke(obj);
+                    out.println("<p>Return: "+methodReturn+"</p>");
+                } catch (Exception e) {
+                    out.println(e.getMessage());
+                }
             }
             else{
                 out.println("<p>Il n'y a pas de methode associe a ce chemin</p>");
