@@ -13,6 +13,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLDecoder;
 
+import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -99,8 +100,19 @@ public class FrontController extends HttpServlet{
                     Constructor<?> constructeur=mapping.getClasse().getConstructor();
                     Method method=mapping.getClasse().getMethod(mapping.getMethodName());
                     Object obj=constructeur.newInstance();
-                    String methodReturn=(String)method.invoke(obj);
-                    out.println("<p>Return: "+methodReturn+"</p>");
+                    Object methodReturn=method.invoke(obj);
+                    if(methodReturn instanceof ModelAndView){
+                        ModelAndView modelAndView=(ModelAndView)methodReturn;
+                        HashMap<String,Object> objectsToAdd=modelAndView.getObjects();
+                        for(String key:objectsToAdd.keySet()){
+                            request.setAttribute(key, objectsToAdd.get(key));
+                        }
+                        RequestDispatcher dispatcher=request.getRequestDispatcher(modelAndView.getUrl());
+                        dispatcher.forward(request, response);
+                    }
+                    else{
+                        out.println(methodReturn);
+                    }
                 } catch (Exception e) {
                     out.println(e.getMessage());
                 }
