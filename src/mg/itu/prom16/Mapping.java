@@ -1,11 +1,14 @@
 package mg.itu.prom16;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Constructor;
+
 public class Mapping {
     Class<?> classe;
-    String methodName;
-    public Mapping(Class<?> classe,String methodName){
+    Method method;
+    public Mapping(Class<?> classe,Method method){
         this.setClasse(classe);
-        this.setMethodName(methodName);
+        this.setMethod(method);
     }
     public Class<?> getClasse() {
         return classe;
@@ -13,10 +16,15 @@ public class Mapping {
     public void setClasse(Class<?> classe) {
         this.classe = classe;
     }
-    public String getMethodName() {
-        return methodName;
+    public Method getMethod() {
+        return method;
     }
-    public void setMethodName(String methodName) {
-        this.methodName = methodName;
+    public void setMethod(Method methodName) {
+        this.method = methodName;
+    }
+    public Object invokeMethod()throws Exception{
+        Constructor<?> constructeur=this.getClasse().getConstructor();
+        Object obj=constructeur.newInstance();
+        return method.invoke(obj);
     }
 }

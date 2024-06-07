@@ -20,6 +20,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import mg.itu.prom16.annotation.AnnotationController;
 import mg.itu.prom16.annotation.GetUrl;
+import mg.itu.prom16.exception.DuplicatedUrlException;
+import mg.itu.prom16.exception.NoControllerFoundException;
+import mg.itu.prom16.exception.PackageNotFoundException;
+import mg.itu.prom16.exception.PackageXmlNotFoundException;
+import mg.itu.prom16.exception.ReturnTypeException;
+import mg.itu.prom16.exception.UrlNotFoundException;
 
 public class FrontController extends HttpServlet{
     String pack;
@@ -27,23 +33,30 @@ public class FrontController extends HttpServlet{
 
     public void init()throws ServletException{
         super.init();
-        scan();
-    }
-
-    private void scan(){
-        this.pack=this.getInitParameter("controllerPackage");
         try {
-            List<Class<?>> listes=getClassesInPackage(this.pack);
-            this.hashMap=this.initializeHashMap(listes);
+            scan();  
         } catch (Exception e) {
+            throw new ServletException(e);
         }
     }
 
-    private List<Class<?>> getClassesInPackage(String packageName) throws IOException, ClassNotFoundException {
+    private void scan()throws Exception{
+        this.pack=this.getInitParameter("controllerPackage");
+        if(this.pack==null){
+            throw new PackageXmlNotFoundException();
+        }
+        List<Class<?>> listes=getClassesInPackage(this.pack);
+        this.hashMap=this.initializeHashMap(listes);
+    }
+
+    private List<Class<?>> getClassesInPackage(String packageName) throws Exception {
         List<Class<?>> classes = new ArrayList<Class<?>>();
         ClassLoader classLoader=Thread.currentThread().getContextClassLoader();
         String path = packageName.replace(".", "/");
         Enumeration<URL> resources = classLoader.getResources(path);
+        if(!resources.hasMoreElements()){
+            throw new PackageNotFoundException(packageName);
+        }
         while(resources.hasMoreElements()){
             URL resource = resources.nextElement();
             if(resource.getProtocol().equals("file")){
@@ -59,22 +72,32 @@ public class FrontController extends HttpServlet{
                             }
                         }
                     }
+                    if(classes.size()==0){
+                        throw new NoControllerFoundException(this.pack);
+                    }
                 }
             }
         }
         return classes;
     }
 
-    public HashMap<String,Mapping> initializeHashMap(List<Class<?>> classes){
+    public HashMap<String,Mapping> initializeHashMap(List<Class<?>> classes)throws DuplicatedUrlException,ReturnTypeException{
         HashMap<String,Mapping> valiny=new HashMap<String,Mapping>();
         for(int i=0;i<classes.size();i++){
             Method[] methods=classes.get(i).getDeclaredMethods();
             for(int e=0;e<methods.length;e++){
+                Mapping newMapping = new Mapping(classes.get(i),methods[e]);
                 //System.out.println(methods[i].getName()+" "+methods[i].isAnnotationPresent(GetUrl.class));
+                if(!(methods[e].getReturnType()==String.class || methods[e].getReturnType()==ModelAndView.class)){
+                    throw new ReturnTypeException(newMapping);
+                }
                 if(methods[e].isAnnotationPresent(GetUrl.class)){
-                    Mapping mapping = new Mapping(classes.get(i),methods[e].getName());
                     GetUrl annotation = methods[e].getAnnotation(GetUrl.class);
-                    valiny.put(annotation.url(),mapping);
+                    Mapping mappingExists=valiny.get(annotation.url());
+                    if(mappingExists!=null){
+                        throw new DuplicatedUrlException(annotation.url(), mappingExists,newMapping);
+                    }
+                    valiny.put(annotation.url(),newMapping);
                 }
             }
         }
@@ -97,10 +120,7 @@ public class FrontController extends HttpServlet{
             Mapping mapping = hashMap.get(url);
             if(mapping!=null){
                 try {
-                    Constructor<?> constructeur=mapping.getClasse().getConstructor();
-                    Method method=mapping.getClasse().getMethod(mapping.getMethodName());
-                    Object obj=constructeur.newInstance();
-                    Object methodReturn=method.invoke(obj);
+                    Object methodReturn=mapping.invokeMethod();
                     if(methodReturn instanceof ModelAndView){
                         ModelAndView modelAndView=(ModelAndView)methodReturn;
                         HashMap<String,Object> objectsToAdd=modelAndView.getObjects();
@@ -118,7 +138,7 @@ public class FrontController extends HttpServlet{
                 }
             }
             else{
-                out.println("<p>Il n'y a pas de methode associe a ce chemin</p>");
+                response.sendError(HttpServletResponse.SC_NOT_FOUND,new UrlNotFoundException(url).getMessage() );
             }
         }
     }
