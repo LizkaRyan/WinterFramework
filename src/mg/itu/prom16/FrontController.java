@@ -8,7 +8,6 @@ import java.util.List;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -33,14 +32,10 @@ public class FrontController extends HttpServlet{
 
     public void init()throws ServletException{
         super.init();
-        try {
-            scan();  
-        } catch (Exception e) {
-            throw new ServletException(e);
-        }
+        scan();
     }
 
-    private void scan()throws Exception{
+    private void scan()throws ServletException{
         this.pack=this.getInitParameter("controllerPackage");
         if(this.pack==null){
             throw new PackageXmlNotFoundException();
@@ -49,34 +44,42 @@ public class FrontController extends HttpServlet{
         this.hashMap=this.initializeHashMap(listes);
     }
 
-    private List<Class<?>> getClassesInPackage(String packageName) throws Exception {
+    private List<Class<?>> getClassesInPackage(String packageName) throws ServletException {
         List<Class<?>> classes = new ArrayList<Class<?>>();
         ClassLoader classLoader=Thread.currentThread().getContextClassLoader();
         String path = packageName.replace(".", "/");
-        Enumeration<URL> resources = classLoader.getResources(path);
-        if(!resources.hasMoreElements()){
-            throw new PackageNotFoundException(packageName);
-        }
-        while(resources.hasMoreElements()){
-            URL resource = resources.nextElement();
-            if(resource.getProtocol().equals("file")){
-                File directory = new File(URLDecoder.decode(resource.getFile(),"UTF-8"));
-                if(directory.exists() && directory.isDirectory()){
-                    File[] files=directory.listFiles();
-                    for(File file : files){
-                        if(file.isFile() && file.getName().endsWith(".class")){
-                            String className = this.pack + '.' + file.getName().replace(".class","");
-                            Class<?> clazz=Class.forName(className);
-                            if(clazz.isAnnotationPresent(AnnotationController.class)){
-                                classes.add(clazz);
+        try{
+            Enumeration<URL> resources = classLoader.getResources(path);
+            if(!resources.hasMoreElements()){
+                throw new PackageNotFoundException(packageName);
+            }
+            while(resources.hasMoreElements()){
+                URL resource = resources.nextElement();
+                if(resource.getProtocol().equals("file")){
+                    File directory = new File(URLDecoder.decode(resource.getFile(),"UTF-8"));
+                    if(directory.exists() && directory.isDirectory()){
+                        File[] files=directory.listFiles();
+                        for(File file : files){
+                            if(file.isFile() && file.getName().endsWith(".class")){
+                                String className = this.pack + '.' + file.getName().replace(".class","");
+                                Class<?> clazz=Class.forName(className);
+                                if(clazz.isAnnotationPresent(AnnotationController.class)){
+                                    classes.add(clazz);
+                                }
                             }
                         }
-                    }
-                    if(classes.size()==0){
-                        throw new NoControllerFoundException(this.pack);
+                        if(classes.size()==0){
+                            throw new NoControllerFoundException(this.pack);
+                        }
                     }
                 }
             }
+        }
+        catch(ServletException ex){
+            throw ex;
+        }
+        catch(Exception ex){
+            ex.printStackTrace();
         }
         return classes;
     }
@@ -121,13 +124,7 @@ public class FrontController extends HttpServlet{
                 try {
                     Object methodReturn=mapping.invokeMethod(getParameters(request));
                     if(methodReturn instanceof ModelAndView){
-                        ModelAndView modelAndView=(ModelAndView)methodReturn;
-                        HashMap<String,Object> objectsToAdd=modelAndView.getObjects();
-                        for(String key:objectsToAdd.keySet()){
-                            request.setAttribute(key, objectsToAdd.get(key));
-                        }
-                        RequestDispatcher dispatcher=request.getRequestDispatcher(modelAndView.getUrl());
-                        dispatcher.forward(request, response);
+                        makeRequestDispatcher((ModelAndView)methodReturn,request).forward(request, response);
                     }
                     else{
                         out.println(methodReturn);
@@ -162,5 +159,12 @@ public class FrontController extends HttpServlet{
             valiny.put(parametre,request.getParameter(parametre));
         }
         return valiny;
+    }
+    protected static RequestDispatcher makeRequestDispatcher(ModelAndView modelAndView,HttpServletRequest request){
+        HashMap<String,Object> objectsToAdd=modelAndView.getObjects();
+        for(String key:objectsToAdd.keySet()){
+            request.setAttribute(key, objectsToAdd.get(key));
+        }
+        return request.getRequestDispatcher(modelAndView.getUrl());
     }
 }
