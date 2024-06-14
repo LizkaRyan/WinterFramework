@@ -87,7 +87,6 @@ public class FrontController extends HttpServlet{
             Method[] methods=classes.get(i).getDeclaredMethods();
             for(int e=0;e<methods.length;e++){
                 Mapping newMapping = new Mapping(classes.get(i),methods[e]);
-                //System.out.println(methods[i].getName()+" "+methods[i].isAnnotationPresent(GetUrl.class));
                 if(!(methods[e].getReturnType()==String.class || methods[e].getReturnType()==ModelAndView.class)){
                     throw new ReturnTypeException(newMapping);
                 }
@@ -120,7 +119,7 @@ public class FrontController extends HttpServlet{
             Mapping mapping = hashMap.get(url);
             if(mapping!=null){
                 try {
-                    Object methodReturn=mapping.invokeMethod();
+                    Object methodReturn=mapping.invokeMethod(getParameters(request));
                     if(methodReturn instanceof ModelAndView){
                         ModelAndView modelAndView=(ModelAndView)methodReturn;
                         HashMap<String,Object> objectsToAdd=modelAndView.getObjects();
@@ -153,5 +152,15 @@ public class FrontController extends HttpServlet{
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
+    }
+
+    protected static HashMap<String,String> getParameters(HttpServletRequest request){
+        HashMap<String,String> valiny=new HashMap<String,String>();
+        Enumeration<String> parametres=request.getParameterNames();
+        while(parametres.hasMoreElements()){
+            String parametre=parametres.nextElement();
+            valiny.put(parametre,request.getParameter(parametre));
+        }
+        return valiny;
     }
 }
