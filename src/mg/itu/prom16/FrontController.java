@@ -125,13 +125,7 @@ public class FrontController extends HttpServlet{
                 try {
                     Object methodReturn=mapping.invokeMethod();
                     if(methodReturn instanceof ModelAndView){
-                        ModelAndView modelAndView=(ModelAndView)methodReturn;
-                        HashMap<String,Object> objectsToAdd=modelAndView.getObjects();
-                        for(String key:objectsToAdd.keySet()){
-                            request.setAttribute(key, objectsToAdd.get(key));
-                        }
-                        RequestDispatcher dispatcher=request.getRequestDispatcher(modelAndView.getUrl());
-                        dispatcher.forward(request, response);
+                        makeRequestDispatcher((ModelAndView)methodReturn,request).forward(request, response);
                     }
                     else{
                         out.println(methodReturn);
@@ -156,5 +150,13 @@ public class FrontController extends HttpServlet{
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
+    }
+
+    protected static RequestDispatcher makeRequestDispatcher(ModelAndView modelAndView,HttpServletRequest request){
+        HashMap<String,Object> objectsToAdd=modelAndView.getObjects();
+        for(String key:objectsToAdd.keySet()){
+            request.setAttribute(key, objectsToAdd.get(key));
+        }
+        return request.getRequestDispatcher(modelAndView.getUrl());
     }
 }
