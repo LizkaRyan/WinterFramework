@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import com.thoughtworks.paranamer.AdaptiveParanamer;
+import com.thoughtworks.paranamer.Paranamer;
+
 import mg.itu.prom16.annotation.Param;
 
 import java.lang.reflect.Constructor;
@@ -33,10 +36,12 @@ public class Mapping {
     public Object invokeMethod(HashMap<String,String> requestParameters)throws Exception{
         Constructor<?> constructeur=this.getClasse().getConstructor();
         Object obj=constructeur.newInstance();
+        Paranamer paranamer=new AdaptiveParanamer();
+        String[] parameterNames = paranamer.lookupParameterNames(method);
         Parameter[] functionParameters=this.method.getParameters();
         List<Object> parametersValue=new ArrayList<Object>();
         for(int i=0;i<functionParameters.length;i++){
-            parametersValue.add(getParameterValue(requestParameters,functionParameters[i]));
+            parametersValue.add(getParameterValue(requestParameters,functionParameters[i],parameterNames[i]));
         }
         Object[] parameterValues=parametersValue.toArray();
         return method.invoke(obj,parameterValues);
@@ -54,18 +59,21 @@ public class Mapping {
         if(classe==Long.class){
             return true;
         }
+        if(classe==String.class){
+            return true;
+        }
         return false;
     }
-    private Object getParameterValue(HashMap<String,String> requestParameters,Parameter functionParameter) throws Exception{
+    private Object getParameterValue(HashMap<String,String> requestParameters,Parameter functionParameter,String nameParameter) throws Exception{
         Class<?> classe=functionParameter.getType();
         if(isPrimitive(classe)){
             if(functionParameter.isAnnotationPresent(Param.class)){
                 Param param=functionParameter.getAnnotation(Param.class);
                 return requestParameters.get(param.name());
             }
-            return requestParameters.get(functionParameter.getName());
+            return requestParameters.get(nameParameter);
         }
-        String name=functionParameter.getName();
+        String name=nameParameter;
         if(functionParameter.isAnnotationPresent(Param.class)){
             Param param=functionParameter.getAnnotation(Param.class);
             name=param.name();
@@ -86,7 +94,7 @@ public class Mapping {
         }
     }
     private static Method getSetter(Object object,Object value,Method[] setters,String attribut)throws Exception{
-        String nameSetter="set"+attribut.substring(0,1).toLowerCase()+attribut.substring(1);
+        String nameSetter="set"+attribut.substring(0,1).toUpperCase()+attribut.substring(1);
         for(int i=0;i<setters.length;i++){
             if(setters[i].getReturnType()==Void.class && nameSetter==setters[i].getName()){
                 return setters[i];
