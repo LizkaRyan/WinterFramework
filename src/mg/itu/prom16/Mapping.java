@@ -7,12 +7,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-import com.thoughtworks.paranamer.AdaptiveParanamer;
-import com.thoughtworks.paranamer.Paranamer;
-
+import mg.itu.prom16.annotation.Attribut;
 import mg.itu.prom16.annotation.Param;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 
 public class Mapping {
     Class<?> classe;
@@ -33,11 +32,20 @@ public class Mapping {
     public void setMethod(Method methodName) {
         this.method = methodName;
     }
+    private String[] getParameterName()throws Exception{
+        Parameter[] parameter=this.method.getParameters();
+        String[] valiny=new String[parameter.length];
+        for(int i=0;i<parameter.length;i++){
+            valiny[i]=parameter[i].getName();
+        }
+        return valiny;
+    }
     public Object invokeMethod(HashMap<String,String> requestParameters)throws Exception{
         Constructor<?> constructeur=this.getClasse().getConstructor();
         Object obj=constructeur.newInstance();
-        Paranamer paranamer=new AdaptiveParanamer();
-        String[] parameterNames = paranamer.lookupParameterNames(method);
+        //Paranamer paranamer=new AdaptiveParanamer();
+        //String[] parameterNames = paranamer.lookupParameterNames(this.method);
+        String[] parameterNames = this.getParameterName();
         Parameter[] functionParameters=this.method.getParameters();
         List<Object> parametersValue=new ArrayList<Object>();
         for(int i=0;i<functionParameters.length;i++){
@@ -64,6 +72,21 @@ public class Mapping {
         }
         return false;
     }
+    private static Object getPrimitive(Class<?> classe,String string){
+        if(classe==int.class){
+            return Integer.parseInt(string);
+        }
+        if(classe==double.class){
+            return Double.parseDouble(string);
+        }
+        if(classe==float.class){
+            return Float.parseFloat(string);
+        }
+        if(classe==Long.class){
+            return Long.parseLong(string);
+        }
+        return string;
+    }
     private Object getParameterValue(HashMap<String,String> requestParameters,Parameter functionParameter,String nameParameter) throws Exception{
         Class<?> classe=functionParameter.getType();
         if(isPrimitive(classe)){
@@ -84,30 +107,52 @@ public class Mapping {
         return valiny;
     }
     private static void setValue(Object object,HashMap<String,String> requestParameters,String name){
+        Field[] fields=object.getClass().getDeclaredFields();
         Set<String> keys=requestParameters.keySet();
         Method[] setters=object.getClass().getMethods();
-        for (String key : keys) {
-            if(key.contains(name+".")){
-                String attribut=name.split(".")[1];
-                setValue(object, requestParameters.get(key), setters, attribut);
+        for(int i=0;i<fields.length;i++){
+            String attribut=fields[i].getName();
+            String parameterName=fields[i].getName();
+            if(fields[i].isAnnotationPresent(Attribut.class)){
+                Attribut attributAnnotation=fields[i].getAnnotation(Attribut.class);
+                attribut=attributAnnotation.name();
+            }
+            for (String key : keys) {
+                if(key.contains(name+".")){
+                    String attributRequest=key.split("[.]")[1];
+                    if(attributRequest.compareTo(attribut)==0){
+                        setValue(object, requestParameters.get(key), setters, parameterName);
+                    }
+                }
             }
         }
     }
-    private static Method getSetter(Object object,Object value,Method[] setters,String attribut)throws Exception{
+    private static Method getSetter(Object object,Method[] setters,String attribut)throws Exception{
+        Field[] fields=object.getClass().getDeclaredFields();
+        for(int i=0;i<fields.length;i++){
+            if(fields[i].isAnnotationPresent(Attribut.class)){
+                Attribut attributAnnotation=fields[i].getAnnotation(Attribut.class);
+                if(attributAnnotation.name().compareTo(attribut)==0){
+                    attribut=fields[i].getName();
+                    break;
+                }
+            }
+        }
         String nameSetter="set"+attribut.substring(0,1).toUpperCase()+attribut.substring(1);
         for(int i=0;i<setters.length;i++){
-            if(setters[i].getReturnType()==Void.class && nameSetter==setters[i].getName()){
+            if(nameSetter.compareToIgnoreCase(setters[i].getName())==0){
                 return setters[i];
             }
         }
         throw new Exception("erreur");
     }
-    private static void setValue(Object object,Object value,Method[] setters,String attribut){
+    private static void setValue(Object object,String value,Method[] setters,String attribut){
         try {
-            Method setter=getSetter(object, value, setters, attribut);
-            setter.invoke(object, value);
+            Method setter=getSetter(object, setters, attribut);
+            Parameter[] parameter=setter.getParameters();
+            setter.invoke(object, getPrimitive(parameter[0].getType(),value));
         } catch (Exception e) {
-            // TODO: handle exception
+            e.printStackTrace();
         }
     }
 }
