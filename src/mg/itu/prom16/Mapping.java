@@ -89,12 +89,12 @@ public class Mapping {
     }
     private Object getParameterValue(HashMap<String,String> requestParameters,Parameter functionParameter,String nameParameter) throws Exception{
         Class<?> classe=functionParameter.getType();
-        if(isPrimitive(classe)){
+        if(classe.isPrimitive() || classe==String.class){
             if(functionParameter.isAnnotationPresent(Param.class)){
                 Param param=functionParameter.getAnnotation(Param.class);
-                return requestParameters.get(param.name());
+                return getPrimitive(functionParameter.getType(), requestParameters.get(param.name()));
             }
-            return requestParameters.get(nameParameter);
+            return getPrimitive(functionParameter.getType(), requestParameters.get(nameParameter));
         }
         String name=nameParameter;
         if(functionParameter.isAnnotationPresent(Param.class)){
