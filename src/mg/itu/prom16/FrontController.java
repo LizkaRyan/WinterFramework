@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
-
+import java.util.Set;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -123,8 +123,10 @@ public class FrontController extends HttpServlet{
             Mapping mapping = hashMap.get(url);
             if(mapping!=null){
                 try {
-                    Session session=tunIntoSession(request.getSession());
-                    Object methodReturn=mapping.invokeMethod(request,session);
+                    HttpSession httpSession=request.getSession();
+                    Session session=turnIntoSession(httpSession);
+                    Object methodReturn=mapping.invokeMethod(getParameters(request),session);
+                    updateSession(session,httpSession);
                     if(methodReturn instanceof ModelAndView){
                         makeRequestDispatcher((ModelAndView)methodReturn,request).forward(request, response);
                     }
@@ -178,5 +180,15 @@ public class FrontController extends HttpServlet{
             valiny.add(key,httpSession.getAttribute(key));
         }
         return valiny;
+    }
+    protected static void updateSession(Session session,HttpSession httpSession){
+        Enumeration<String> keysHttp=httpSession.getAttributeNames();
+        while(keysHttp.hasMoreElements()){
+            httpSession.removeAttribute(keysHttp.nextElement());
+        }        
+        Set<String> keys=session.getKeys();
+        for (String key : keys) {
+            httpSession.setAttribute(key, session.get(key));
+        }
     }
 }
