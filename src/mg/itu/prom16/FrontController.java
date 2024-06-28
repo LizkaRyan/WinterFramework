@@ -17,6 +17,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import mg.itu.prom16.annotation.AnnotationController;
 import mg.itu.prom16.annotation.GetUrl;
 import mg.itu.prom16.exception.DuplicatedUrlException;
@@ -122,7 +123,8 @@ public class FrontController extends HttpServlet{
             Mapping mapping = hashMap.get(url);
             if(mapping!=null){
                 try {
-                    Object methodReturn=mapping.invokeMethod(getParameters(request));
+                    Session session=tunIntoSession(request.getSession());
+                    Object methodReturn=mapping.invokeMethod(request,session);
                     if(methodReturn instanceof ModelAndView){
                         makeRequestDispatcher((ModelAndView)methodReturn,request).forward(request, response);
                     }
@@ -167,5 +169,14 @@ public class FrontController extends HttpServlet{
             request.setAttribute(key, objectsToAdd.get(key));
         }
         return request.getRequestDispatcher(modelAndView.getUrl());
+    }
+    protected static Session turnIntoSession(HttpSession httpSession){
+        Enumeration<String> keys=httpSession.getAttributeNames();
+        Session valiny=new Session();
+        while (keys.hasMoreElements()) {
+            String key=keys.nextElement();
+            valiny.add(key,httpSession.getAttribute(key));
+        }
+        return valiny;
     }
 }
