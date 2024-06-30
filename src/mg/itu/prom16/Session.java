@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Set;
 
 public class Session {
-    protected HashMap<String,Object> map;
+    protected HashMap<String,Object> map=new HashMap<String,Object>();
     public void add(String key,Object value){
         this.map.put(key, value);
     }

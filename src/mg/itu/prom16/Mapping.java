@@ -95,10 +95,10 @@ public class Mapping {
                 Param param=functionParameter.getAnnotation(Param.class);
                 return getPrimitive(functionParameter.getType(), requestParameters.get(param.name()));
             }
-            else if(functionParameter.getType()==Session.class){
-                return session;
-            }
             throw new ParamNotFoundException();
+        }
+        else if(classe==Session.class){
+            return session;
         }
         String name=nameParameter;
         if(functionParameter.isAnnotationPresent(Param.class)){
