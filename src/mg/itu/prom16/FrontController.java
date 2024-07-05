@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
-
+import java.util.Set;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -17,6 +17,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import mg.itu.prom16.annotation.AnnotationController;
 import mg.itu.prom16.annotation.GetUrl;
 import mg.itu.prom16.exception.DuplicatedUrlException;
@@ -29,6 +30,7 @@ import mg.itu.prom16.exception.UrlNotFoundException;
 public class FrontController extends HttpServlet{
     String pack;
     HashMap<String,Mapping> hashMap;
+    Session session=new Session();
 
     public void init()throws ServletException{
         super.init();
@@ -122,7 +124,8 @@ public class FrontController extends HttpServlet{
             Mapping mapping = hashMap.get(url);
             if(mapping!=null){
                 try {
-                    Object methodReturn=mapping.invokeMethod(getParameters(request));
+                    session.setSession(request.getSession());
+                    Object methodReturn=mapping.invokeMethod(getParameters(request),session);
                     if(methodReturn instanceof ModelAndView){
                         makeRequestDispatcher((ModelAndView)methodReturn,request).forward(request, response);
                     }

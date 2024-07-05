@@ -9,6 +9,7 @@ import java.util.Set;
 
 import mg.itu.prom16.annotation.Attribut;
 import mg.itu.prom16.annotation.Param;
+import mg.itu.prom16.exception.ParamNotFoundException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -40,16 +41,24 @@ public class Mapping {
         }
         return valiny;
     }
-    public Object invokeMethod(HashMap<String,String> requestParameters)throws Exception{
+    public Object invokeMethod(HashMap<String,String> requestParameters,Session session)throws Exception{
         Constructor<?> constructeur=this.getClasse().getConstructor();
         Object obj=constructeur.newInstance();
+        Field[] field = this.getClasse().getDeclaredFields();
+        for(int i=0;i<field.length;i++){
+            if(field[i].getType()==Session.class){
+                field[i].setAccessible(true);
+                field[i].set(obj, session);
+            }
+        }
+
         //Paranamer paranamer=new AdaptiveParanamer();
         //String[] parameterNames = paranamer.lookupParameterNames(this.method);
         String[] parameterNames = this.getParameterName();
         Parameter[] functionParameters=this.method.getParameters();
         List<Object> parametersValue=new ArrayList<Object>();
         for(int i=0;i<functionParameters.length;i++){
-            parametersValue.add(getParameterValue(requestParameters,functionParameters[i],parameterNames[i]));
+            parametersValue.add(getParameterValue(requestParameters,functionParameters[i],parameterNames[i],session));
         }
         Object[] parameterValues=parametersValue.toArray();
         return method.invoke(obj,parameterValues);
@@ -87,14 +96,17 @@ public class Mapping {
         }
         return string;
     }
-    private Object getParameterValue(HashMap<String,String> requestParameters,Parameter functionParameter,String nameParameter) throws Exception{
+    private Object getParameterValue(HashMap<String,String> requestParameters,Parameter functionParameter,String nameParameter,Session session) throws Exception{
         Class<?> classe=functionParameter.getType();
         if(classe.isPrimitive() || classe==String.class){
             if(functionParameter.isAnnotationPresent(Param.class)){
                 Param param=functionParameter.getAnnotation(Param.class);
                 return getPrimitive(functionParameter.getType(), requestParameters.get(param.name()));
             }
-            return getPrimitive(functionParameter.getType(), requestParameters.get(nameParameter));
+            throw new ParamNotFoundException();
+        }
+        else if(classe==Session.class){
+            return session;
         }
         String name=nameParameter;
         if(functionParameter.isAnnotationPresent(Param.class)){
