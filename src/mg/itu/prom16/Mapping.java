@@ -44,6 +44,14 @@ public class Mapping {
     public Object invokeMethod(HashMap<String,String> requestParameters,Session session)throws Exception{
         Constructor<?> constructeur=this.getClasse().getConstructor();
         Object obj=constructeur.newInstance();
+        Field[] field = this.getClasse().getDeclaredFields();
+        for(int i=0;i<field.length;i++){
+            if(field[i].getType()==Session.class){
+                field[i].setAccessible(true);
+                field[i].set(obj, session);
+            }
+        }
+
         //Paranamer paranamer=new AdaptiveParanamer();
         //String[] parameterNames = paranamer.lookupParameterNames(this.method);
         String[] parameterNames = this.getParameterName();
