@@ -1,23 +1,28 @@
 package mg.itu.prom16;
 
-import java.util.HashMap;
-import java.util.Set;
+import jakarta.servlet.http.HttpSession;
 
 public class Session {
-    protected HashMap<String,Object> map=new HashMap<String,Object>();
+    protected HttpSession session;
+    public Session(){
+        
+    }
+    public Session(HttpSession session){
+        this.session=session;
+    }
+    public void setSession(HttpSession session){
+        this.session=session;
+    }
     public void add(String key,Object value){
-        this.map.put(key, value);
+        this.session.setAttribute(key, value);
     }
     public void remove(String key){
-        this.map.remove(key);
+        this.session.removeAttribute(key);
     }
     public Object get(String key){
-        return this.map.get(key);
+        return this.session.getAttribute(key);
     }
     public void update(String key,String value){
-        this.map.replace(key, value);
-    }
-    public Set<String> getKeys(){
-        return this.map.keySet();
+        this.session.setAttribute(key, value);
     }
 }

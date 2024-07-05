@@ -30,6 +30,7 @@ import mg.itu.prom16.exception.UrlNotFoundException;
 public class FrontController extends HttpServlet{
     String pack;
     HashMap<String,Mapping> hashMap;
+    Session session=new Session();
 
     public void init()throws ServletException{
         super.init();
@@ -123,10 +124,8 @@ public class FrontController extends HttpServlet{
             Mapping mapping = hashMap.get(url);
             if(mapping!=null){
                 try {
-                    HttpSession httpSession=request.getSession();
-                    Session session=turnIntoSession(httpSession);
+                    session.setSession(request.getSession());
                     Object methodReturn=mapping.invokeMethod(getParameters(request),session);
-                    updateSession(session,httpSession);
                     if(methodReturn instanceof ModelAndView){
                         makeRequestDispatcher((ModelAndView)methodReturn,request).forward(request, response);
                     }
@@ -171,24 +170,5 @@ public class FrontController extends HttpServlet{
             request.setAttribute(key, objectsToAdd.get(key));
         }
         return request.getRequestDispatcher(modelAndView.getUrl());
-    }
-    protected static Session turnIntoSession(HttpSession httpSession){
-        Enumeration<String> keys=httpSession.getAttributeNames();
-        Session valiny=new Session();
-        while (keys.hasMoreElements()) {
-            String key=keys.nextElement();
-            valiny.add(key,httpSession.getAttribute(key));
-        }
-        return valiny;
-    }
-    protected static void updateSession(Session session,HttpSession httpSession){
-        Enumeration<String> keysHttp=httpSession.getAttributeNames();
-        while(keysHttp.hasMoreElements()){
-            httpSession.removeAttribute(keysHttp.nextElement());
-        }        
-        Set<String> keys=session.getKeys();
-        for (String key : keys) {
-            httpSession.setAttribute(key, session.get(key));
-        }
     }
 }
