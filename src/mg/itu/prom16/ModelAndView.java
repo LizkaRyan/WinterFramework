@@ -1,5 +1,6 @@
 package mg.itu.prom16;
 import java.util.HashMap;
+
 public class ModelAndView{
     String url;
     HashMap<String,Object> objects=new HashMap<String,Object>();

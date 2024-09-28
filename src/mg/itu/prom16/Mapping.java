@@ -51,9 +51,6 @@ public class Mapping {
                 field[i].set(obj, session);
             }
         }
-
-        //Paranamer paranamer=new AdaptiveParanamer();
-        //String[] parameterNames = paranamer.lookupParameterNames(this.method);
         String[] parameterNames = this.getParameterName();
         Parameter[] functionParameters=this.method.getParameters();
         List<Object> parametersValue=new ArrayList<Object>();
