@@ -15,17 +15,17 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 
 public class Mapping {
-    Class<?> classe;
+    Class<?> controller;
     Method method;
     public Mapping(Class<?> classe,Method method){
-        this.setClasse(classe);
+        this.setController(classe);
         this.setMethod(method);
     }
-    public Class<?> getClasse() {
-        return classe;
+    public Class<?> getController() {
+        return controller;
     }
-    public void setClasse(Class<?> classe) {
-        this.classe = classe;
+    public void setController(Class<?> classe) {
+        this.controller = classe;
     }
     public Method getMethod() {
         return method;
@@ -42,18 +42,15 @@ public class Mapping {
         return valiny;
     }
     public Object invokeMethod(HashMap<String,String> requestParameters,Session session)throws Exception{
-        Constructor<?> constructeur=this.getClasse().getConstructor();
+        Constructor<?> constructeur=this.getController().getConstructor();
         Object obj=constructeur.newInstance();
-        Field[] field = this.getClasse().getDeclaredFields();
+        Field[] field = this.getController().getDeclaredFields();
         for(int i=0;i<field.length;i++){
             if(field[i].getType()==Session.class){
                 field[i].setAccessible(true);
                 field[i].set(obj, session);
             }
         }
-
-        //Paranamer paranamer=new AdaptiveParanamer();
-        //String[] parameterNames = paranamer.lookupParameterNames(this.method);
         String[] parameterNames = this.getParameterName();
         Parameter[] functionParameters=this.method.getParameters();
         List<Object> parametersValue=new ArrayList<Object>();
@@ -62,24 +59,6 @@ public class Mapping {
         }
         Object[] parameterValues=parametersValue.toArray();
         return method.invoke(obj,parameterValues);
-    }
-    private static boolean isPrimitive(Class<?> classe){
-        if(classe==Integer.class){
-            return true;
-        }
-        if(classe==Double.class){
-            return true;
-        }
-        if(classe==Float.class){
-            return true;
-        }
-        if(classe==Long.class){
-            return true;
-        }
-        if(classe==String.class){
-            return true;
-        }
-        return false;
     }
     private static Object getPrimitive(Class<?> classe,String string){
         if(classe==int.class){

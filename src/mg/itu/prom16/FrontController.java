@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -12,14 +12,16 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLDecoder;
 
+import com.google.gson.Gson;
+
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import mg.itu.prom16.annotation.AnnotationController;
 import mg.itu.prom16.annotation.GetUrl;
+import mg.itu.prom16.annotation.RestController;
 import mg.itu.prom16.exception.DuplicatedUrlException;
 import mg.itu.prom16.exception.NoControllerFoundException;
 import mg.itu.prom16.exception.PackageNotFoundException;
@@ -92,7 +94,7 @@ public class FrontController extends HttpServlet{
             Method[] methods=classes.get(i).getDeclaredMethods();
             for(int e=0;e<methods.length;e++){
                 Mapping newMapping = new Mapping(classes.get(i),methods[e]);
-                if(!(methods[e].getReturnType()==String.class || methods[e].getReturnType()==ModelAndView.class)){
+                if(!(methods[e].getReturnType()==String.class || methods[e].getReturnType()==ModelAndView.class) && !methods[e].isAnnotationPresent(RestController.class)){
                     throw new ReturnTypeException(newMapping);
                 }
                 if(methods[e].isAnnotationPresent(GetUrl.class)){
@@ -123,18 +125,11 @@ public class FrontController extends HttpServlet{
             String url = getRequest(request.getRequestURI());
             Mapping mapping = hashMap.get(url);
             if(mapping!=null){
-                try {
-                    session.setSession(request.getSession());
-                    Object methodReturn=mapping.invokeMethod(getParameters(request),session);
-                    if(methodReturn instanceof ModelAndView){
-                        makeRequestDispatcher((ModelAndView)methodReturn,request).forward(request, response);
-                    }
-                    else{
-                        out.println(methodReturn);
-                    }
-                } catch (Exception e) {
-                    out.println(e);
-                    e.printStackTrace();
+                if(mapping.getMethod().isAnnotationPresent(RestController.class)){
+                    restController(request, response,mapping,out);
+                }
+                else{
+                    normalController(request,response,mapping,out);
                 }
             }
             else{
@@ -170,5 +165,42 @@ public class FrontController extends HttpServlet{
             request.setAttribute(key, objectsToAdd.get(key));
         }
         return request.getRequestDispatcher(modelAndView.getUrl());
+    }
+    protected void restController(HttpServletRequest request,HttpServletResponse response,Mapping mapping,PrintWriter out){
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        try {
+            this.session.setSession(request.getSession());
+            Object methodReturn=mapping.invokeMethod(getParameters(request),session);
+            String json="";
+            if(methodReturn instanceof ModelAndView){
+                ModelAndView modelAndView=(ModelAndView)methodReturn;
+                json=new Gson().toJson(modelAndView.getObjects());
+            }
+            else{
+                json=new Gson().toJson(methodReturn);
+            }
+            out.println(json);
+        } catch (Exception e) {
+            out.println(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    protected void normalController(HttpServletRequest request,HttpServletResponse response,Mapping mapping,PrintWriter out){
+        response.setContentType("text/html;charset=UTF-8");
+        try {
+            this.session.setSession(request.getSession());
+            Object methodReturn=mapping.invokeMethod(getParameters(request),session);
+            if(methodReturn instanceof ModelAndView){
+                makeRequestDispatcher((ModelAndView)methodReturn,request).forward(request, response);
+            }
+            else{
+                out.println(methodReturn);
+            }
+        } catch (Exception e) {
+            out.println(e);
+            e.printStackTrace();
+        }
     }
 }
