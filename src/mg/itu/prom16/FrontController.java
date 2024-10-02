@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import mg.itu.prom16.annotation.AnnotationController;
+import mg.itu.prom16.annotation.Controller;
 import mg.itu.prom16.annotation.Post;
 import mg.itu.prom16.annotation.RestController;
 import mg.itu.prom16.annotation.Url;
@@ -77,7 +77,7 @@ public class FrontController extends HttpServlet{
                             if(file.isFile() && file.getName().endsWith(".class")){
                                 String className = this.pack + '.' + file.getName().replace(".class","");
                                 Class<?> clazz=Class.forName(className);
-                                if(clazz.isAnnotationPresent(AnnotationController.class)){
+                                if(clazz.isAnnotationPresent(Controller.class)){
                                     classes.add(clazz);
                                 }
                             }
