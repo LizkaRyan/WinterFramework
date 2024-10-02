@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLDecoder;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 
 import javax.servlet.RequestDispatcher;
@@ -174,10 +175,12 @@ public class FrontController extends HttpServlet{
             String json="";
             if(methodReturn instanceof ModelAndView){
                 ModelAndView modelAndView=(ModelAndView)methodReturn;
-                json=new Gson().toJson(modelAndView.getObjects());
+                ObjectMapper objectMapper=new ObjectMapper();
+                json=objectMapper.writeValueAsString(modelAndView.getObjects());
             }
             else{
-                json=new Gson().toJson(methodReturn);
+                Gson gson=new Gson();
+                json=gson.toJson(methodReturn);
             }
             out.println(json);
         } catch (Exception e) {
