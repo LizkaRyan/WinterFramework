@@ -11,7 +11,6 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLDecoder;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 
 import javax.servlet.RequestDispatcher;
@@ -19,10 +18,13 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import mg.itu.prom16.annotation.AnnotationController;
-import mg.itu.prom16.annotation.GetUrl;
+import mg.itu.prom16.annotation.Post;
 import mg.itu.prom16.annotation.RestController;
+import mg.itu.prom16.annotation.Url;
 import mg.itu.prom16.exception.DuplicatedUrlException;
+import mg.itu.prom16.exception.MethodException;
 import mg.itu.prom16.exception.NoControllerFoundException;
 import mg.itu.prom16.exception.PackageNotFoundException;
 import mg.itu.prom16.exception.PackageXmlNotFoundException;
@@ -34,9 +36,17 @@ public class FrontController extends HttpServlet{
     HashMap<String,Mapping> hashMap;
     Session session=new Session();
 
+    protected final static int POST=0;
+    protected final static int GET=1;
+
+    protected static HashMap<Integer,String> methodTypeServlet;
+
     public void init()throws ServletException{
         super.init();
         scan();
+        methodTypeServlet=new HashMap<Integer,String>();
+        methodTypeServlet.put(POST,"POST");
+        methodTypeServlet.put(GET,"GET");
     }
 
     private void scan()throws ServletException{
@@ -94,20 +104,33 @@ public class FrontController extends HttpServlet{
             Method[] methods=classes.get(i).getDeclaredMethods();
             for(int e=0;e<methods.length;e++){
                 Mapping newMapping = new Mapping(classes.get(i),methods[e]);
-                if(!(methods[e].getReturnType()==String.class || methods[e].getReturnType()==ModelAndView.class) && !methods[e].isAnnotationPresent(RestController.class)){
-                    throw new ReturnTypeException(newMapping);
+                if(!methods[e].isAnnotationPresent(Url.class)){
+                    continue;
                 }
-                if(methods[e].isAnnotationPresent(GetUrl.class)){
-                    GetUrl annotation = methods[e].getAnnotation(GetUrl.class);
-                    Mapping mappingExists=valiny.get(annotation.url());
-                    if(mappingExists!=null){
-                        throw new DuplicatedUrlException(annotation.url(), mappingExists,newMapping);
-                    }
-                    valiny.put(annotation.url(),newMapping);
+                Url annotation = methods[e].getAnnotation(Url.class);
+                if(methods[e].isAnnotationPresent(Post.class)){
+                    newMapping.setMethodServletType(POST);
                 }
+                else{
+                    newMapping.setMethodServletType(GET);
+                }
+                testMappingException(methods[e], newMapping, valiny, annotation);
+                valiny.put(annotation.url(),newMapping);
             }
         }
         return valiny;
+    }
+
+    public void testMappingException(Method method,Mapping newMapping,HashMap<String,Mapping> valiny,Url annotation)throws DuplicatedUrlException,ReturnTypeException{
+        if(!(method.getReturnType()==String.class || method.getReturnType()==ModelAndView.class) && !method.isAnnotationPresent(RestController.class)){
+            throw new ReturnTypeException(newMapping);
+        }
+        Mapping mappingExists=valiny.get(annotation.url());
+        if(mappingExists!=null){
+            if(mappingExists.getMethodServletType()==newMapping.getMethodServletType()){
+                throw new DuplicatedUrlException(annotation.url(), mappingExists,newMapping);
+            }
+        }
     }
 
     public static String getRequest(String url){
@@ -118,9 +141,18 @@ public class FrontController extends HttpServlet{
         return "";
     }
 
+    protected void processRequest(HttpServletRequest request,HttpServletResponse response,int methodUsed)throws ServletException, IOException{
+        String url = getRequest(request.getRequestURI());
+        Mapping mapping = hashMap.get(url);
+        int methodShouldUsed=mapping.getMethodServletType();
+        if(methodUsed!=methodShouldUsed){
+            throw new MethodException(methodTypeServlet.get(methodUsed),methodTypeServlet.get(methodShouldUsed),url);
+        }
+        processRequest(request, response);
+    }
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) {
             String url = getRequest(request.getRequestURI());
             Mapping mapping = hashMap.get(url);
@@ -141,13 +173,13 @@ public class FrontController extends HttpServlet{
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request,response);
+        processRequest(request,response,GET);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        processRequest(request,response,POST);
     }
 
     protected static HashMap<String,String> getParameters(HttpServletRequest request){
@@ -175,8 +207,7 @@ public class FrontController extends HttpServlet{
             String json="";
             if(methodReturn instanceof ModelAndView){
                 ModelAndView modelAndView=(ModelAndView)methodReturn;
-                ObjectMapper objectMapper=new ObjectMapper();
-                json=objectMapper.writeValueAsString(modelAndView.getObjects());
+                json=new Gson().toJson(modelAndView.getObjects());
             }
             else{
                 Gson gson=new Gson();

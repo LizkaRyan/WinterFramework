@@ -17,6 +17,7 @@ import java.lang.reflect.Field;
 public class Mapping {
     Class<?> controller;
     Method method;
+    int methodServletType;
     public Mapping(Class<?> classe,Method method){
         this.setController(classe);
         this.setMethod(method);
@@ -32,6 +33,12 @@ public class Mapping {
     }
     public void setMethod(Method methodName) {
         this.method = methodName;
+    }
+    public void setMethodServletType(int methodServletType){
+        this.methodServletType=methodServletType;
+    }
+    public int getMethodServletType(){
+        return this.methodServletType;
     }
     private String[] getParameterName()throws Exception{
         Parameter[] parameter=this.method.getParameters();
