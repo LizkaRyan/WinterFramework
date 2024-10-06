@@ -1,6 +1,6 @@
 package mg.itu.prom16.exception;
 
-import jakarta.servlet.ServletException;
+import javax.servlet.ServletException;
 
 public class PackageXmlNotFoundException extends ServletException {
     public PackageXmlNotFoundException(){

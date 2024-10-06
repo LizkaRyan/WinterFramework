@@ -1,6 +1,6 @@
 package mg.itu.prom16;
 
-import jakarta.servlet.http.HttpSession;
+import javax.servlet.http.HttpSession;
 
 public class Session {
     protected HttpSession session;

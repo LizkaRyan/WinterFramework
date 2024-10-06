@@ -1,6 +1,6 @@
 package mg.itu.prom16.exception;
 
-import jakarta.servlet.ServletException;
+import javax.servlet.ServletException;
 import mg.itu.prom16.Mapping;
 
 public class ReturnTypeException extends ServletException {
