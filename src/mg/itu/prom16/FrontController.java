@@ -31,6 +31,7 @@ import mg.itu.prom16.exception.PackageNotFoundException;
 import mg.itu.prom16.exception.PackageXmlNotFoundException;
 import mg.itu.prom16.exception.ReturnTypeException;
 import mg.itu.prom16.exception.UrlNotFoundException;
+import mg.itu.prom16.exception.WinterException;
 
 public class FrontController extends HttpServlet{
     String pack;
@@ -44,7 +45,7 @@ public class FrontController extends HttpServlet{
         scan();
     }
 
-    private void scan()throws ServletException{
+    private void scan()throws WinterException{
         this.pack=this.getInitParameter("controllerPackage");
         if(this.pack==null){
             throw new PackageXmlNotFoundException();
@@ -53,7 +54,7 @@ public class FrontController extends HttpServlet{
         this.hashMap=this.initializeHashMap(listes);
     }
 
-    private List<Class<?>> getClassesInPackage(String packageName) throws ServletException {
+    private List<Class<?>> getClassesInPackage(String packageName) throws WinterException {
         List<Class<?>> classes = new ArrayList<Class<?>>();
         ClassLoader classLoader=Thread.currentThread().getContextClassLoader();
         String path = packageName.replace(".", "/");
@@ -84,7 +85,7 @@ public class FrontController extends HttpServlet{
                 }
             }
         }
-        catch(ServletException ex){
+        catch(WinterException ex){
             throw ex;
         }
         catch(Exception ex){
@@ -138,7 +139,7 @@ public class FrontController extends HttpServlet{
         return "";
     }
 
-    protected void executeMethod(HttpServletRequest request,HttpServletResponse response,Verb methodUsed)throws ServletException, IOException{
+    protected void executeMethod(HttpServletRequest request,HttpServletResponse response,Verb methodUsed)throws WinterException, IOException{
         String url = getRequest(request.getRequestURI());
         HashMap<String,Mapping> hashmapping = hashMap.get(methodUsed);
         Mapping mapping=hashmapping.get(url);
@@ -158,7 +159,7 @@ public class FrontController extends HttpServlet{
     }
 
     protected void executeMethod(HttpServletRequest request, HttpServletResponse response,Mapping mapping)
-            throws ServletException, IOException {
+            throws WinterException, IOException {
         PrintWriter out=response.getWriter();
         try {
             if(mapping.getMethod().isAnnotationPresent(RestController.class)){
@@ -167,7 +168,7 @@ public class FrontController extends HttpServlet{
             else{
                 normalController(request,response,mapping,out);
             }
-        } catch (ServletException|IOException e) {
+        } catch (WinterException|IOException e) {
             throw e;
         }
         catch(Exception e){
@@ -181,13 +182,27 @@ public class FrontController extends HttpServlet{
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        executeMethod(request,response,Verb.GET);
+        try {
+            executeMethod(request,response,Verb.GET);
+        } catch (WinterException e) {
+            response.sendError(e.getStatusCode(),e.getMessage());
+        }
+        catch(Exception ex){
+            throw ex;
+        }    
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        executeMethod(request,response,Verb.POST);
+        try {
+            executeMethod(request,response,Verb.POST);
+        } catch (WinterException e) {
+            response.sendError(e.getStatusCode(),e.getMessage());
+        }
+        catch(Exception ex){
+            throw ex;
+        }
     }
 
     protected static HashMap<String,String> getParameters(HttpServletRequest request){
