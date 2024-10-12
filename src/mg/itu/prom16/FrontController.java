@@ -148,12 +148,11 @@ public class FrontController extends HttpServlet{
             hashmapping=hashMap.get(otherMethod);
             mapping=hashmapping.get(url);
             if(mapping==null){
-                response.sendError(HttpServletResponse.SC_NOT_FOUND,new UrlNotFoundException(url).getMessage());
+                throw new UrlNotFoundException(url);
             }
             else{
                 throw new MethodException(methodUsed.toString(),otherMethod.toString(),url);
             }
-            return;
         }
         executeMethod(request, response,mapping);
     }
