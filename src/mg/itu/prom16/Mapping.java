@@ -7,8 +7,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import javax.servlet.http.Part;
+
 import mg.itu.prom16.annotation.Attribut;
 import mg.itu.prom16.annotation.Param;
+import mg.itu.prom16.annotation.WinterFile;
 import mg.itu.prom16.exception.ParamNotFoundException;
 
 import java.lang.reflect.Constructor;
@@ -41,7 +44,7 @@ public class Mapping {
         }
         return valiny;
     }
-    public Object invokeMethod(HashMap<String,String> requestParameters,Session session)throws Exception{
+    public Object invokeMethod(HashMap<String,String> requestParameters,HashMap<String,Part> parts,Session session)throws Exception{
         Constructor<?> constructeur=this.getController().getConstructor();
         Object obj=constructeur.newInstance();
         Field[] field = this.getController().getDeclaredFields();
@@ -55,7 +58,7 @@ public class Mapping {
         Parameter[] functionParameters=this.method.getParameters();
         List<Object> parametersValue=new ArrayList<Object>();
         for(int i=0;i<functionParameters.length;i++){
-            parametersValue.add(getParameterValue(requestParameters,functionParameters[i],parameterNames[i],session));
+            parametersValue.add(getParameterValue(requestParameters,parts,functionParameters[i],parameterNames[i],session));
         }
         Object[] parameterValues=parametersValue.toArray();
         return method.invoke(obj,parameterValues);
@@ -75,7 +78,7 @@ public class Mapping {
         }
         return string;
     }
-    private Object getParameterValue(HashMap<String,String> requestParameters,Parameter functionParameter,String nameParameter,Session session) throws Exception{
+    private Object getParameterValue(HashMap<String,String> requestParameters,HashMap<String,Part> parts,Parameter functionParameter,String nameParameter,Session session) throws Exception{
         Class<?> classe=functionParameter.getType();
         if(classe.isPrimitive() || classe==String.class){
             if(functionParameter.isAnnotationPresent(Param.class)){
@@ -86,6 +89,10 @@ public class Mapping {
         }
         else if(classe==Session.class){
             return session;
+        }
+        if(functionParameter.isAnnotationPresent(WinterFile.class)){
+            WinterFile winterFile=functionParameter.getAnnotation(WinterFile.class);
+            return parts.get(winterFile.name());
         }
         String name=nameParameter;
         if(functionParameter.isAnnotationPresent(Param.class)){
