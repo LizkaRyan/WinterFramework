@@ -1,6 +1,7 @@
 package mg.itu.prom16;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -15,9 +16,11 @@ import com.google.gson.Gson;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
 
 import mg.itu.prom16.annotation.Controller;
 import mg.itu.prom16.annotation.Post;
@@ -33,6 +36,7 @@ import mg.itu.prom16.exception.ReturnTypeException;
 import mg.itu.prom16.exception.UrlNotFoundException;
 import mg.itu.prom16.exception.WinterException;
 
+@MultipartConfig
 public class FrontController extends HttpServlet{
     String pack;
     HashMap<Verb,HashMap<String,Mapping>> hashMap;
@@ -171,6 +175,7 @@ public class FrontController extends HttpServlet{
             throw e;
         }
         catch(Exception e){
+            e.printStackTrace();
             out.println(e);
         }
         finally{
@@ -184,9 +189,11 @@ public class FrontController extends HttpServlet{
         try {
             executeMethod(request,response,Verb.GET);
         } catch (WinterException e) {
+            e.printStackTrace();
             response.sendError(e.getStatusCode(),e.getMessage());
         }
         catch(Exception ex){
+            ex.printStackTrace();
             throw ex;
         }    
     }
@@ -197,9 +204,11 @@ public class FrontController extends HttpServlet{
         try {
             executeMethod(request,response,Verb.POST);
         } catch (WinterException e) {
+            e.printStackTrace();
             response.sendError(e.getStatusCode(),e.getMessage());
         }
         catch(Exception ex){
+            ex.printStackTrace();
             throw ex;
         }
     }
@@ -213,6 +222,23 @@ public class FrontController extends HttpServlet{
         }
         return valiny;
     }
+
+    protected static HashMap<String,Part> getParts(HttpServletRequest request)throws Exception{
+        HashMap<String,Part> valiny=new HashMap<String,Part>();
+        String contentType = request.getContentType();
+        if(contentType!=null){
+            if(contentType.toLowerCase().startsWith("multipart/")){
+                Collection<Part> parts = request.getParts();
+                for (Part part : parts) {
+                    String partName = part.getName(); // Nom du champ dans le formulaire
+                    valiny.put(partName, part);
+                }
+                return valiny;
+            }
+        }
+        return valiny;
+    }
+
     protected static RequestDispatcher makeRequestDispatcher(ModelAndView modelAndView,HttpServletRequest request){
         HashMap<String,Object> objectsToAdd=modelAndView.getObjects();
         for(String key:objectsToAdd.keySet()){
@@ -225,7 +251,7 @@ public class FrontController extends HttpServlet{
         response.setCharacterEncoding("UTF-8");
         try {
             this.session.setSession(request.getSession());
-            Object methodReturn=mapping.invokeMethod(getParameters(request),session);
+            Object methodReturn=mapping.invokeMethod(getParameters(request),getParts(request),session);
             String json="";
             if(methodReturn instanceof ModelAndView){
                 ModelAndView modelAndView=(ModelAndView)methodReturn;
@@ -237,6 +263,7 @@ public class FrontController extends HttpServlet{
             }
             out.println(json);
         } catch (Exception e) {
+            e.printStackTrace();
             throw e;
         }
     }
@@ -245,7 +272,7 @@ public class FrontController extends HttpServlet{
         response.setContentType("text/html;charset=UTF-8");
         try {
             this.session.setSession(request.getSession());
-            Object methodReturn=mapping.invokeMethod(getParameters(request),session);
+            Object methodReturn=mapping.invokeMethod(getParameters(request),getParts(request),session);
             if(methodReturn instanceof ModelAndView){
                 makeRequestDispatcher((ModelAndView)methodReturn,request).forward(request, response);
             }
