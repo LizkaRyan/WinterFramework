@@ -23,13 +23,13 @@ public class WinterException extends ServletException {
                         "</head>\r\n" + //
                         "<style>\r\n" + //
                         "    .box{\r\n" + //
-                        "        border: solid red 1px;\r\n" + //
+                        "        border: solid #f7493f 1px;\r\n" + //
                         "        padding: 5%;\r\n" + //
                         "        width: 50%;\r\n" + //
                         "        border-radius: 15px;\r\n" + //
                         "    }\r\n" + //
                         "    body{\r\n" + //
-                        "        background-color: black;\r\n" + //
+                        "        background-color: #0d1017;\r\n" + //
                         "        color: white;\r\n" + //
                         "        display: flex;\r\n" + //
                         "        justify-content: center;\r\n" + //
@@ -38,10 +38,10 @@ public class WinterException extends ServletException {
                         "<body>\r\n" + //
                         "    <div class=\"box\">\r\n" + //
                         "        <div style=\"display: flex;justify-content: center;\">\r\n" + //
-                        "            <h3 style=\"color: red;font-size: xx-large;font-family: sans-serif;\">Erreur - "+this.getStatusCode()+"</h3>\r\n" + //
+                        "            <h3 style=\"color: #f7493f;font-size: xx-large;font-family: sans-serif;\">Erreur - "+this.getStatusCode()+"</h3>\r\n" + //
                         "        </div>\r\n" + //
                         "        <br>\r\n" + //
-                        "        <hr style=\"border-color: red;\">\r\n" + //
+                        "        <hr style=\"border-color: #f7493f;\">\r\n" + //
                         "        <p>"+this.getStackTraceException()+"</p>\r\n" + //
                         "    </div>\r\n" + //
                         "</body>\r\n" + //
