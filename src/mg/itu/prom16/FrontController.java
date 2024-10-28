@@ -186,30 +186,37 @@ public class FrontController extends HttpServlet{
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        PrintWriter out=response.getWriter();
         try {
             executeMethod(request,response,Verb.GET);
         } catch (WinterException e) {
-            e.printStackTrace();
-            response.sendError(e.getStatusCode(),e.getMessage());
+            out.println(e.generateWeb());
         }
         catch(Exception ex){
             ex.printStackTrace();
             throw ex;
-        }    
+        }
+        finally{
+            out.close();
+        }
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        PrintWriter out=response.getWriter();
         try {
             executeMethod(request,response,Verb.POST);
         } catch (WinterException e) {
             e.printStackTrace();
-            response.sendError(e.getStatusCode(),e.getMessage());
+            out.println(e.generateWeb());
         }
         catch(Exception ex){
             ex.printStackTrace();
             throw ex;
+        }
+        finally{
+            out.close();
         }
     }
 

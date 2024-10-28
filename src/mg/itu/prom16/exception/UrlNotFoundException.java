@@ -5,7 +5,7 @@ public class UrlNotFoundException extends WinterException {
         super("Il n'y a pas de methode associe au chemin :\""+url+"\"");
     }
     @Override
-    public int getStatusCode() {
+    protected int getStatusCode() {
         return 404;    
     }
 }
