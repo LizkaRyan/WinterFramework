@@ -11,6 +11,8 @@ import javax.servlet.http.Part;
 
 import mg.itu.prom16.annotation.Attribut;
 import mg.itu.prom16.annotation.Param;
+import mg.itu.prom16.annotation.RestController;
+import mg.itu.prom16.annotation.RestMethod;
 import mg.itu.prom16.annotation.WinterFile;
 import mg.itu.prom16.exception.ParamNotFoundException;
 
@@ -35,6 +37,9 @@ public class Mapping {
     }
     public void setMethod(Method methodName) {
         this.method = methodName;
+    }
+    public boolean isRest(){
+        return controller.isAnnotationPresent(RestController.class) || method.isAnnotationPresent(RestMethod.class);
     }
     private String[] getParameterName()throws Exception{
         Parameter[] parameter=this.method.getParameters();

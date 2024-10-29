@@ -77,7 +77,7 @@ public class FrontController extends HttpServlet{
                             if(file.isFile() && file.getName().endsWith(".class")){
                                 String className = this.pack + '.' + file.getName().replace(".class","");
                                 Class<?> clazz=Class.forName(className);
-                                if(clazz.isAnnotationPresent(Controller.class)){
+                                if(clazz.isAnnotationPresent(Controller.class) || clazz.isAnnotationPresent(RestController.class)){
                                     classes.add(clazz);
                                 }
                             }
@@ -111,11 +111,11 @@ public class FrontController extends HttpServlet{
                 }
                 Url annotation = methods[e].getAnnotation(Url.class);
                 if(methods[e].isAnnotationPresent(Post.class)){
-                    testMappingException(methods[e], newMapping, post, annotation);
+                    testMappingException(newMapping, post, annotation);
                     post.put(annotation.url(),newMapping);
                 }
                 else{
-                    testMappingException(methods[e], newMapping, get, annotation);
+                    testMappingException(newMapping, get, annotation);
                     get.put(annotation.url(), newMapping);
                 }
             }
@@ -125,11 +125,14 @@ public class FrontController extends HttpServlet{
         return valiny;
     }
 
-    public void testMappingException(Method method,Mapping newMapping,HashMap<String,Mapping> valiny,Url annotation)throws DuplicatedUrlException,ReturnTypeException{
-        if(!(method.getReturnType()==String.class || method.getReturnType()==ModelAndView.class) && !method.isAnnotationPresent(RestController.class)){
-            throw new ReturnTypeException(newMapping);
+    public void testMappingException(Mapping newMapping,HashMap<String,Mapping> mapping,Url annotation)throws DuplicatedUrlException,ReturnTypeException{
+        Method method=newMapping.getMethod();
+        if(!newMapping.isRest()){
+            if(!(method.getReturnType()==String.class || method.getReturnType()==ModelAndView.class)){
+                throw new ReturnTypeException(newMapping);
+            }
         }
-        Mapping mappingExists=valiny.get(annotation.url());
+        Mapping mappingExists=mapping.get(annotation.url());
         if(mappingExists!=null){
             throw new DuplicatedUrlException(annotation.url(), mappingExists,newMapping);
         }
@@ -165,7 +168,7 @@ public class FrontController extends HttpServlet{
             throws WinterException, IOException {
         PrintWriter out=response.getWriter();
         try {
-            if(mapping.getMethod().isAnnotationPresent(RestController.class)){
+            if(mapping.isRest()){
                 restController(request, response,mapping,out);
             }
             else{
