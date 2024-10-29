@@ -10,9 +10,11 @@ import java.util.Set;
 import javax.servlet.http.Part;
 
 import mg.itu.prom16.annotation.Attribut;
+import mg.itu.prom16.annotation.Controller;
 import mg.itu.prom16.annotation.Param;
 import mg.itu.prom16.annotation.RestController;
 import mg.itu.prom16.annotation.RestMethod;
+import mg.itu.prom16.annotation.Url;
 import mg.itu.prom16.annotation.WinterFile;
 import mg.itu.prom16.exception.ParamNotFoundException;
 
@@ -37,6 +39,34 @@ public class Mapping {
     }
     public void setMethod(Method methodName) {
         this.method = methodName;
+    }
+    public static String dropFirtSlash(String url){
+        if(url.charAt(0)=='/'){
+            return url.substring(1);
+        }
+        return url;
+    }
+    public static String addFirtSlash(String url){
+        if(url.charAt(0)!='/'){
+            return "/"+url;
+        }
+        return url;
+    }
+    public String getUrl(){
+        String url="";
+        if(controller.isAnnotationPresent(RestController.class)){
+            RestController restController=this.controller.getAnnotation(RestController.class);
+            url=dropFirtSlash(restController.mapping());
+        }
+        else{
+            Controller controller=this.controller.getAnnotation(Controller.class);
+            url=dropFirtSlash(controller.mapping());
+        }
+        Url urlMethod=this.method.getAnnotation(Url.class);
+        if(url==""){
+            return urlMethod.url();
+        }
+        return url+addFirtSlash(urlMethod.url());
     }
     public boolean isRest(){
         return controller.isAnnotationPresent(RestController.class) || method.isAnnotationPresent(RestMethod.class);

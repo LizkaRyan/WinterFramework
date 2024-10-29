@@ -109,14 +109,14 @@ public class FrontController extends HttpServlet{
                 if(!methods[e].isAnnotationPresent(Url.class)){
                     continue;
                 }
-                Url annotation = methods[e].getAnnotation(Url.class);
+                String url=newMapping.getUrl();
                 if(methods[e].isAnnotationPresent(Post.class)){
-                    testMappingException(newMapping, post, annotation);
-                    post.put(annotation.url(),newMapping);
+                    testMappingException(newMapping, post, url);
+                    post.put(url,newMapping);
                 }
                 else{
-                    testMappingException(newMapping, get, annotation);
-                    get.put(annotation.url(), newMapping);
+                    testMappingException(newMapping, get, url);
+                    get.put(url, newMapping);
                 }
             }
         }
@@ -125,16 +125,16 @@ public class FrontController extends HttpServlet{
         return valiny;
     }
 
-    public void testMappingException(Mapping newMapping,HashMap<String,Mapping> mapping,Url annotation)throws DuplicatedUrlException,ReturnTypeException{
+    public void testMappingException(Mapping newMapping,HashMap<String,Mapping> mapping,String url)throws DuplicatedUrlException,ReturnTypeException{
         Method method=newMapping.getMethod();
         if(!newMapping.isRest()){
             if(!(method.getReturnType()==String.class || method.getReturnType()==ModelAndView.class)){
                 throw new ReturnTypeException(newMapping);
             }
         }
-        Mapping mappingExists=mapping.get(annotation.url());
+        Mapping mappingExists=mapping.get(url);
         if(mappingExists!=null){
-            throw new DuplicatedUrlException(annotation.url(), mappingExists,newMapping);
+            throw new DuplicatedUrlException(url, mappingExists,newMapping);
         }
     }
 
