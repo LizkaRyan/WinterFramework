@@ -9,14 +9,14 @@ import java.util.Set;
 
 import javax.servlet.http.Part;
 
-import mg.itu.prom16.annotation.Attribut;
-import mg.itu.prom16.annotation.Controller;
-import mg.itu.prom16.annotation.Param;
-import mg.itu.prom16.annotation.RestController;
-import mg.itu.prom16.annotation.RestMethod;
-import mg.itu.prom16.annotation.Url;
-import mg.itu.prom16.annotation.WinterFile;
-import mg.itu.prom16.exception.ParamNotFoundException;
+import mg.itu.prom16.annotation.field.Attribut;
+import mg.itu.prom16.annotation.method.RestMethod;
+import mg.itu.prom16.annotation.method.Url;
+import mg.itu.prom16.annotation.parameter.Param;
+import mg.itu.prom16.annotation.parameter.WinterFile;
+import mg.itu.prom16.annotation.type.Controller;
+import mg.itu.prom16.annotation.type.RestController;
+import mg.itu.prom16.exception.running.ParamNotFoundException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;

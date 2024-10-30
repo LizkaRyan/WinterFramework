@@ -22,19 +22,19 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
-import mg.itu.prom16.annotation.Controller;
-import mg.itu.prom16.annotation.Post;
-import mg.itu.prom16.annotation.RestController;
-import mg.itu.prom16.annotation.Url;
+import mg.itu.prom16.annotation.method.Post;
+import mg.itu.prom16.annotation.method.Url;
+import mg.itu.prom16.annotation.type.Controller;
+import mg.itu.prom16.annotation.type.RestController;
 import mg.itu.prom16.enumeration.Verb;
-import mg.itu.prom16.exception.DuplicatedUrlException;
-import mg.itu.prom16.exception.MethodException;
-import mg.itu.prom16.exception.NoControllerFoundException;
-import mg.itu.prom16.exception.PackageNotFoundException;
-import mg.itu.prom16.exception.PackageXmlNotFoundException;
-import mg.itu.prom16.exception.ReturnTypeException;
-import mg.itu.prom16.exception.UrlNotFoundException;
 import mg.itu.prom16.exception.WinterException;
+import mg.itu.prom16.exception.initializing.DuplicatedUrlException;
+import mg.itu.prom16.exception.initializing.NoControllerFoundException;
+import mg.itu.prom16.exception.initializing.PackageNotFoundException;
+import mg.itu.prom16.exception.initializing.PackageXmlNotFoundException;
+import mg.itu.prom16.exception.initializing.ReturnTypeException;
+import mg.itu.prom16.exception.running.MethodException;
+import mg.itu.prom16.exception.running.UrlNotFoundException;
 
 @MultipartConfig
 public class FrontController extends HttpServlet{

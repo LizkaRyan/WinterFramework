@@ -1,4 +1,6 @@
-package mg.itu.prom16.exception;
+package mg.itu.prom16.exception.initializing;
+
+import mg.itu.prom16.exception.WinterException;
 
 public class PackageXmlNotFoundException extends  WinterException {
     public PackageXmlNotFoundException(){
