@@ -1,4 +1,4 @@
-package mg.itu.prom16;
+package mg.itu.prom16.winter;
 
 import javax.servlet.http.HttpSession;
 

@@ -16,7 +16,7 @@ import mg.itu.prom16.annotation.parameter.Param;
 import mg.itu.prom16.annotation.parameter.WinterFile;
 import mg.itu.prom16.annotation.type.Controller;
 import mg.itu.prom16.annotation.type.RestController;
-import mg.itu.prom16.exception.running.ParamNotFoundException;
+import mg.itu.prom16.winter.exception.running.ParamNotFoundException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;

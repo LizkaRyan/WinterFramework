@@ -1,4 +1,4 @@
-package mg.itu.prom16.exception;
+package mg.itu.prom16.winter.exception;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

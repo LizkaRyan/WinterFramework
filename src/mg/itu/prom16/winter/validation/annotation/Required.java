@@ -5,7 +5,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import mg.itu.prom16.validation.generic.PointerValidator;
+import mg.itu.prom16.validation.annotation.PointerValidator;
 import mg.itu.prom16.winter.validation.validator.RequiredValidator;
 
 @PointerValidator(RequiredValidator.class)
