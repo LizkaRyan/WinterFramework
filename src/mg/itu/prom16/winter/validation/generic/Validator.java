@@ -1,7 +1,9 @@
-package mg.itu.prom16.validation.generic;
+package mg.itu.prom16.winter.validation.generic;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+
+import mg.itu.prom16.validation.generic.CustomValidator;
 
 public final class Validator {
     

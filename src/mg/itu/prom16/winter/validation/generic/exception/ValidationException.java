@@ -1,4 +1,4 @@
-package mg.itu.prom16.validation.generic.exception;
+package mg.itu.prom16.winter.validation.generic.exception;
 
 import mg.itu.prom16.winter.exception.WinterException;
 
