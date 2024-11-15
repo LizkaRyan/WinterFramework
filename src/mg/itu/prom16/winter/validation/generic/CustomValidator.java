@@ -1,9 +1,9 @@
-package mg.itu.prom16.validation.generic;
+package mg.itu.prom16.winter.validation.generic;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
-import mg.itu.prom16.validation.generic.exception.ValidationException;
+import mg.itu.prom16.winter.validation.generic.exception.ValidationException;
 
 public abstract class CustomValidator<A extends Annotation> {
     private final Class<A> annotationClass;
@@ -27,5 +27,5 @@ public abstract class CustomValidator<A extends Annotation> {
         }
     }
 
-    public abstract void validate(Object t,A annotation)throws ValidationException;
+    public abstract void validate(Object object,A annotation)throws ValidationException;
 }
