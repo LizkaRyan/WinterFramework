@@ -18,6 +18,8 @@ import mg.itu.prom16.annotation.type.Controller;
 import mg.itu.prom16.annotation.type.RestController;
 import mg.itu.prom16.winter.exception.running.ParamNotFoundException;
 import mg.itu.prom16.winter.validation.generic.Validator;
+import mg.itu.prom16.winter.validation.generic.exception.ListValidationException;
+import mg.itu.prom16.winter.validation.generic.exception.ValidationException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -138,7 +140,10 @@ public class Mapping {
         Constructor<?> constructor=classe.getConstructor();
         Object valiny=constructor.newInstance();
         setValue(valiny, requestParameters, name);
-        Validator.validate(valiny);
+        List<ValidationException> validationException=Validator.validate(valiny);
+        if(validationException.size()!=0){
+            throw new ListValidationException(validationException);
+        }
         return valiny;
     }
     private static void setValue(Object object,HashMap<String,String> requestParameters,String name){

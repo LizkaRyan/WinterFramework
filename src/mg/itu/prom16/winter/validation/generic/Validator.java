@@ -2,7 +2,9 @@ package mg.itu.prom16.winter.validation.generic;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import mg.itu.prom16.winter.validation.generic.annotation.PointerValidator;
@@ -31,13 +33,15 @@ public final class Validator {
         }
     }
 
-    public static void validate(Object o)throws Exception{
-        validate(getCustomValidators(o),o);
+    public static List<ValidationException> validate(Object o)throws Exception{
+        return validate(getCustomValidators(o),o);
     }
 
-    public static void validate(Set<CustomValidator<?>> validators,Object o)throws ValidationException,IllegalAccessException{
+    public static List<ValidationException> validate(Set<CustomValidator<?>> validators,Object o)throws Exception{
+        List<ValidationException> answer=new ArrayList<ValidationException>();
         for (CustomValidator<?> customValidator : validators) {
-            customValidator.validate(o);
+            customValidator.validate(o,answer);
         }
+        return answer;
     }
 }

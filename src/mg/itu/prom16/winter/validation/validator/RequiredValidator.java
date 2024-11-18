@@ -12,10 +12,11 @@ public class RequiredValidator extends CustomValidator<Required> {
     }
 
     @Override
-    public void validate(Object o,Required required)throws ValidationException {
+    public ValidationException validate(Object o,Required required) {
         if(o==null){
-            throw new RequiredException(required.message());
+            return new RequiredException(required.message());
         }
+        return null;
     }
     
 }
