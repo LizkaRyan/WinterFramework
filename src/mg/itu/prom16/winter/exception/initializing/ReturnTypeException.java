@@ -1,7 +1,7 @@
-package mg.itu.prom16.exception.initializing;
+package mg.itu.prom16.winter.exception.initializing;
 
-import mg.itu.prom16.Mapping;
-import mg.itu.prom16.exception.WinterException;
+import mg.itu.prom16.winter.exception.WinterException;
+import mg.itu.prom16.winter.Mapping;
 
 public class ReturnTypeException extends WinterException {
     public ReturnTypeException(Mapping mapping){

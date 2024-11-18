@@ -1,7 +1,7 @@
 // Source code is decompiled from a .class file using FernFlower decompiler.
-package mg.itu.prom16.exception.running;
+package mg.itu.prom16.winter.exception.running;
 
-import mg.itu.prom16.exception.WinterException;
+import mg.itu.prom16.winter.exception.WinterException;
 
 public class MethodException extends WinterException{
    public MethodException(String methodUsed, String methodShouldUsed, String url) {

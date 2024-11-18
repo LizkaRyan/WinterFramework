@@ -1,6 +1,6 @@
-package mg.itu.prom16.exception.running;
+package mg.itu.prom16.winter.exception.running;
 
-import mg.itu.prom16.exception.WinterException;
+import mg.itu.prom16.winter.exception.WinterException;
 
 public class ParamNotFoundException extends WinterException {
     public ParamNotFoundException(){

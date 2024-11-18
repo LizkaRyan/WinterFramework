@@ -1,4 +1,4 @@
-package mg.itu.prom16;
+package mg.itu.prom16.winter;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -16,7 +16,10 @@ import mg.itu.prom16.annotation.parameter.Param;
 import mg.itu.prom16.annotation.parameter.WinterFile;
 import mg.itu.prom16.annotation.type.Controller;
 import mg.itu.prom16.annotation.type.RestController;
-import mg.itu.prom16.exception.running.ParamNotFoundException;
+import mg.itu.prom16.winter.exception.running.ParamNotFoundException;
+import mg.itu.prom16.winter.validation.generic.Validator;
+import mg.itu.prom16.winter.validation.generic.exception.ListValidationException;
+import mg.itu.prom16.winter.validation.generic.exception.ValidationException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -137,6 +140,10 @@ public class Mapping {
         Constructor<?> constructor=classe.getConstructor();
         Object valiny=constructor.newInstance();
         setValue(valiny, requestParameters, name);
+        List<ValidationException> validationException=Validator.validate(valiny);
+        if(validationException.size()!=0){
+            throw new ListValidationException(validationException);
+        }
         return valiny;
     }
     private static void setValue(Object object,HashMap<String,String> requestParameters,String name){
@@ -145,7 +152,6 @@ public class Mapping {
         Method[] setters=object.getClass().getMethods();
         for(int i=0;i<fields.length;i++){
             String attribut=fields[i].getName();
-            String parameterName=fields[i].getName();
             if(fields[i].isAnnotationPresent(Attribut.class)){
                 Attribut attributAnnotation=fields[i].getAnnotation(Attribut.class);
                 attribut=attributAnnotation.name();
@@ -154,23 +160,14 @@ public class Mapping {
                 if(key.contains(name+".")){
                     String attributRequest=key.split("[.]")[1];
                     if(attributRequest.compareTo(attribut)==0){
-                        setValue(object, requestParameters.get(key), setters, parameterName);
+                        setValue(object, requestParameters.get(key), setters, fields[i]);
                     }
                 }
             }
         }
     }
-    private static Method getSetter(Object object,Method[] setters,String attribut)throws Exception{
-        Field[] fields=object.getClass().getDeclaredFields();
-        for(int i=0;i<fields.length;i++){
-            if(fields[i].isAnnotationPresent(Attribut.class)){
-                Attribut attributAnnotation=fields[i].getAnnotation(Attribut.class);
-                if(attributAnnotation.name().compareTo(attribut)==0){
-                    attribut=fields[i].getName();
-                    break;
-                }
-            }
-        }
+    private static Method getSetter(Object object,Method[] setters,Field champ)throws Exception{
+        String attribut=champ.getName();
         String nameSetter="set"+attribut.substring(0,1).toUpperCase()+attribut.substring(1);
         for(int i=0;i<setters.length;i++){
             if(nameSetter.compareToIgnoreCase(setters[i].getName())==0){
@@ -179,11 +176,12 @@ public class Mapping {
         }
         throw new Exception("erreur");
     }
-    private static void setValue(Object object,String value,Method[] setters,String attribut){
+    private static void setValue(Object object,String value,Method[] setters,Field attribut){
         try {
             Method setter=getSetter(object, setters, attribut);
             Parameter[] parameter=setter.getParameters();
-            setter.invoke(object, getPrimitive(parameter[0].getType(),value));
+            Object valeur=getPrimitive(parameter[0].getType(),value);
+            setter.invoke(object, valeur);
         } catch (Exception e) {
             e.printStackTrace();
         }
