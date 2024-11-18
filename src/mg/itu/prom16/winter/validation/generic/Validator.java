@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import mg.itu.prom16.winter.validation.generic.annotation.PointerValidator;
+import mg.itu.prom16.winter.validation.generic.exception.ValidationException;
 
 public final class Validator {
     
@@ -34,7 +35,7 @@ public final class Validator {
         validate(getCustomValidators(o),o);
     }
 
-    public static void validate(Set<CustomValidator<?>> validators,Object o)throws Exception{
+    public static void validate(Set<CustomValidator<?>> validators,Object o)throws ValidationException,IllegalAccessException{
         for (CustomValidator<?> customValidator : validators) {
             customValidator.validate(o);
         }

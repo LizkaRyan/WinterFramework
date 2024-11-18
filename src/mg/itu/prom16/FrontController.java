@@ -35,6 +35,8 @@ import mg.itu.prom16.winter.exception.initializing.PackageXmlNotFoundException;
 import mg.itu.prom16.winter.exception.initializing.ReturnTypeException;
 import mg.itu.prom16.winter.exception.running.MethodException;
 import mg.itu.prom16.winter.exception.running.UrlNotFoundException;
+import mg.itu.prom16.winter.validation.exception.RangeIntException;
+import mg.itu.prom16.winter.validation.generic.exception.ValidationException;
 import mg.itu.prom16.winter.Mapping;
 import mg.itu.prom16.winter.ModelAndView;
 import mg.itu.prom16.winter.Session;
@@ -153,23 +155,26 @@ public class FrontController extends HttpServlet{
         String url = getRequest(request.getRequestURI());
         HashMap<String,Mapping> hashmapping = hashMap.get(methodUsed);
         Mapping mapping=hashmapping.get(url);
+        PrintWriter out=response.getWriter();
         if(mapping==null){
             Verb otherMethod=methodUsed.getOther();
             hashmapping=hashMap.get(otherMethod);
             mapping=hashmapping.get(url);
             if(mapping==null){
-                throw new UrlNotFoundException(url);
+                out.println(new UrlNotFoundException(url).generateWeb());
+                return;
             }
             else{
-                throw new MethodException(methodUsed.toString(),otherMethod.toString(),url);
+                out.println(new MethodException(methodUsed.toString(),otherMethod.toString(),url).generateWeb());
+                return;
             }
         }
-        executeMethod(request, response,mapping);
+        executeMethod(request, response,mapping,out);
+        out.close();
     }
 
-    protected void executeMethod(HttpServletRequest request, HttpServletResponse response,Mapping mapping)
+    protected void executeMethod(HttpServletRequest request, HttpServletResponse response,Mapping mapping,PrintWriter out)
             throws WinterException, IOException {
-        PrintWriter out=response.getWriter();
         try {
             if(mapping.isRest()){
                 restController(request, response,mapping,out);
@@ -177,53 +182,24 @@ public class FrontController extends HttpServlet{
             else{
                 normalController(request,response,mapping,out);
             }
-        } catch (WinterException|IOException e) {
-            throw e;
+        } catch (WinterException e) {
+            out.println(e.generateWeb());
         }
         catch(Exception e){
-            e.printStackTrace();
-            out.println(e);
-        }
-        finally{
-            out.close();
+            out.println(WinterException.generateWeb(e));
         }
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        PrintWriter out=response.getWriter();
-        try {
-            executeMethod(request,response,Verb.GET);
-        } catch (WinterException e) {
-            out.println(e.generateWeb());
-        }
-        catch(Exception ex){
-            ex.printStackTrace();
-            throw ex;
-        }
-        finally{
-            out.close();
-        }
+        executeMethod(request,response,Verb.GET);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        PrintWriter out=response.getWriter();
-        try {
-            executeMethod(request,response,Verb.POST);
-        } catch (WinterException e) {
-            e.printStackTrace();
-            out.println(e.generateWeb());
-        }
-        catch(Exception ex){
-            ex.printStackTrace();
-            throw ex;
-        }
-        finally{
-            out.close();
-        }
+        executeMethod(request,response,Verb.POST);
     }
 
     protected static HashMap<String,String> getParameters(HttpServletRequest request){
@@ -260,8 +236,7 @@ public class FrontController extends HttpServlet{
         return request.getRequestDispatcher(modelAndView.getUrl());
     }
     protected void restController(HttpServletRequest request,HttpServletResponse response,Mapping mapping,PrintWriter out)throws Exception{
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
+        response.setContentType("application/json;charset=UTF-8");
         try {
             this.session.setSession(request.getSession());
             Object methodReturn=mapping.invokeMethod(getParameters(request),getParts(request),session);
@@ -276,12 +251,11 @@ public class FrontController extends HttpServlet{
             }
             out.println(json);
         } catch (Exception e) {
-            e.printStackTrace();
             throw e;
         }
     }
     
-    protected void normalController(HttpServletRequest request,HttpServletResponse response,Mapping mapping,PrintWriter out){
+    protected void normalController(HttpServletRequest request,HttpServletResponse response,Mapping mapping,PrintWriter out)throws Exception{
         response.setContentType("text/html;charset=UTF-8");
         try {
             this.session.setSession(request.getSession());
@@ -293,8 +267,7 @@ public class FrontController extends HttpServlet{
                 out.println(methodReturn);
             }
         } catch (Exception e) {
-            out.println(e);
-            e.printStackTrace();
+            throw e;
         }
     }
 }

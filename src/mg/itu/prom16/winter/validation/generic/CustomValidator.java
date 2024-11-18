@@ -16,7 +16,7 @@ public abstract class CustomValidator<A extends Annotation> {
         return annotationClass;
     }
 
-    public void validate(Object o)throws Exception{
+    public void validate(Object o)throws ValidationException,IllegalAccessException{
         Field[] fields=o.getClass().getDeclaredFields();
         for(int i=0;i<fields.length;i++){
             if(fields[i].isAnnotationPresent(this.getAnnotationClass())){
