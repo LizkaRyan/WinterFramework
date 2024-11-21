@@ -1,14 +1,27 @@
 package mg.itu.prom16.winter.validation.generic.exception;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import mg.itu.prom16.winter.Mapping;
 import mg.itu.prom16.winter.exception.WinterException;
+import mg.itu.prom16.winter.validation.annotation.IfNotValided;
 
 public class ListValidationException extends WinterException {
     List<ValidationException> validations;
-    public ListValidationException(List<ValidationException> listValidation){
+    Object object;
+    String nameAttribut;
+    public ListValidationException(List<ValidationException> listValidation,Object object,String nameAttribut){
         super("Erreur lors de la validation");
         this.validations=listValidation;
+        this.object=object;
+        this.nameAttribut=nameAttribut;
     }
     @Override
     public String generateWeb(){
@@ -48,5 +61,25 @@ public class ListValidationException extends WinterException {
                         "</body>\r\n" + //
                         "</html>";
         return valiny;
+    }
+
+    public List<String> getListMessages(){
+        List<String> list=new ArrayList<String>();
+        for (int i = 0; i < this.validations.size(); i++) {
+            list.add(validations.get(i).getMessage());
+        }
+        return list;
+    }
+
+    public void showError(Mapping mapping,PrintWriter out,HttpServletRequest request,HttpServletResponse response)throws ServletException,IOException{
+        if(mapping.getMethod().isAnnotationPresent(IfNotValided.class)){
+            IfNotValided ifNotValided=mapping.getMethod().getAnnotation(IfNotValided.class);
+            System.out.println("error."+nameAttribut);
+            request.setAttribute("error."+nameAttribut,object);
+            request.setAttribute("error.messages",this.getListMessages());
+            request.getRequestDispatcher(ifNotValided.url()).forward(request, response);
+            return;
+        }
+        out.println(this.generateWeb());
     }
 }

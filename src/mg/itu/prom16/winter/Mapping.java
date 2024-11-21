@@ -142,7 +142,7 @@ public class Mapping {
         setValue(valiny, requestParameters, name);
         List<ValidationException> validationException=Validator.validate(valiny);
         if(validationException.size()!=0){
-            throw new ListValidationException(validationException);
+            throw new ListValidationException(validationException,valiny,name);
         }
         return valiny;
     }
