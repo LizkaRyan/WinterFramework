@@ -35,6 +35,7 @@ import mg.itu.prom16.winter.exception.initializing.PackageXmlNotFoundException;
 import mg.itu.prom16.winter.exception.initializing.ReturnTypeException;
 import mg.itu.prom16.winter.exception.running.MethodException;
 import mg.itu.prom16.winter.exception.running.UrlNotFoundException;
+import mg.itu.prom16.winter.validation.generic.exception.ListValidationException;
 import mg.itu.prom16.winter.Mapping;
 import mg.itu.prom16.winter.ModelAndView;
 import mg.itu.prom16.winter.Session;
@@ -180,7 +181,14 @@ public class FrontController extends HttpServlet{
             else{
                 normalController(request,response,mapping,out);
             }
-        } catch (WinterException e) {
+        } catch(ListValidationException e){
+            try {
+                e.showError(mapping, out, request, response);
+            } catch (Exception ex) {
+                out.println(WinterException.generateWeb(ex));
+            }
+        } 
+        catch (WinterException e) {
             out.println(e.generateWeb());
         }
         catch(Exception e){
