@@ -39,6 +39,7 @@ import mg.itu.prom16.winter.validation.generic.exception.ListValidationException
 import mg.itu.prom16.winter.Mapping;
 import mg.itu.prom16.winter.ModelAndView;
 import mg.itu.prom16.winter.Session;
+import mg.itu.prom16.winter.validation.annotation.IfNotValidated;
 
 @MultipartConfig
 public class FrontController extends HttpServlet{
@@ -152,24 +153,33 @@ public class FrontController extends HttpServlet{
 
     protected void executeMethod(HttpServletRequest request,HttpServletResponse response,Verb methodUsed)throws WinterException, IOException{
         String url = getRequest(request.getRequestURI());
-        HashMap<String,Mapping> hashmapping = hashMap.get(methodUsed);
-        Mapping mapping=hashmapping.get(url);
         PrintWriter out=response.getWriter();
-        if(mapping==null){
-            Verb otherMethod=methodUsed.getOther();
-            hashmapping=hashMap.get(otherMethod);
-            mapping=hashmapping.get(url);
-            if(mapping==null){
-                out.println(new UrlNotFoundException(url).generateWeb());
-                return;
-            }
-            else{
-                out.println(new MethodException(methodUsed.toString(),otherMethod.toString(),url).generateWeb());
-                return;
-            }
+        Mapping mapping=null;
+        try {
+            mapping=getMapping(url, methodUsed);
+        } catch (WinterException e) {
+            out.println(e.generateWeb());
+            return;
         }
         executeMethod(request, response,mapping,out);
         out.close();
+    }
+
+    protected Mapping getMapping(String url,Verb verb)throws WinterException{
+        HashMap<String,Mapping> hashmapping = hashMap.get(verb);
+        Mapping mapping=hashmapping.get(url);
+        if(mapping==null){
+            Verb otherMethod=verb.getOther();
+            hashmapping=hashMap.get(otherMethod);
+            mapping=hashmapping.get(url);
+            if(mapping==null){
+                throw new UrlNotFoundException(url);
+            }
+            else{
+                throw new MethodException(verb.toString(),otherMethod.toString(),url);
+            }
+        }
+        return mapping;
     }
 
     protected void executeMethod(HttpServletRequest request, HttpServletResponse response,Mapping mapping,PrintWriter out)
@@ -179,11 +189,26 @@ public class FrontController extends HttpServlet{
                 restController(request, response,mapping,out);
             }
             else{
-                normalController(request,response,mapping,out);
+                Object object=normalController(request,response,mapping,out);
+                if (object instanceof ModelAndView) {
+                    makeRequestDispatcher((ModelAndView)object, request).forward(request,response);
+                }
+                else {
+                    out.println(object);
+                }
             }
         } catch(ListValidationException e){
             try {
-                e.showError(mapping, out, request, response);
+                if (mapping.getMethod().isAnnotationPresent(IfNotValidated.class)) {
+                    IfNotValidated ifNotValidated=mapping.getMethod().getAnnotation(IfNotValidated.class);
+                    Mapping erreur=getMapping(ifNotValidated.url(), ifNotValidated.verb());
+                    ModelAndView modelAndView=(ModelAndView)normalController(request, response, erreur, out);
+                    e.setError(modelAndView);
+                    makeRequestDispatcher(modelAndView, request).forward(request,response);
+                }
+                else {
+                    out.println(e.generateWeb());
+                }
             } catch (Exception ex) {
                 out.println(WinterException.generateWeb(ex));
             }
@@ -261,17 +286,12 @@ public class FrontController extends HttpServlet{
         }
     }
     
-    protected void normalController(HttpServletRequest request,HttpServletResponse response,Mapping mapping,PrintWriter out)throws Exception{
+    protected Object normalController(HttpServletRequest request,HttpServletResponse response,Mapping mapping,PrintWriter out)throws Exception{
         response.setContentType("text/html;charset=UTF-8");
         try {
             this.session.setSession(request.getSession());
             Object methodReturn=mapping.invokeMethod(getParameters(request),getParts(request),session);
-            if(methodReturn instanceof ModelAndView){
-                makeRequestDispatcher((ModelAndView)methodReturn,request).forward(request, response);
-            }
-            else{
-                out.println(methodReturn);
-            }
+            return methodReturn;
         } catch (Exception e) {
             throw e;
         }

@@ -5,8 +5,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import mg.itu.prom16.enumeration.Verb;
+
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface IfNotValided {
-    String url();    
+public @interface IfNotValidated {
+    String url();
+    Verb verb() default Verb.GET;    
 }
