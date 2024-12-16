@@ -10,8 +10,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import mg.itu.prom16.winter.Mapping;
+import mg.itu.prom16.winter.ModelAndView;
 import mg.itu.prom16.winter.exception.WinterException;
-import mg.itu.prom16.winter.validation.annotation.IfNotValided;
+import mg.itu.prom16.winter.validation.annotation.IfNotValidated;
 
 public class ListValidationException extends WinterException {
     List<ValidationException> validations;
@@ -71,15 +72,8 @@ public class ListValidationException extends WinterException {
         return list;
     }
 
-    public void showError(Mapping mapping,PrintWriter out,HttpServletRequest request,HttpServletResponse response)throws ServletException,IOException{
-        if(mapping.getMethod().isAnnotationPresent(IfNotValided.class)){
-            IfNotValided ifNotValided=mapping.getMethod().getAnnotation(IfNotValided.class);
-            System.out.println("error."+nameAttribut);
-            request.setAttribute("error."+nameAttribut,object);
-            request.setAttribute("error.messages",this.getListMessages());
-            request.getRequestDispatcher(ifNotValided.url()).forward(request, response);
-            return;
-        }
-        out.println(this.generateWeb());
+    public void setError(ModelAndView modelAndView){
+        modelAndView.addObject("error."+nameAttribut, object);
+        modelAndView.addObject("error.messages", this.getListMessages());
     }
 }

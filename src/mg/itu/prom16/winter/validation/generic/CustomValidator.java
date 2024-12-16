@@ -19,11 +19,11 @@ public abstract class CustomValidator<A extends Annotation> {
 
     public void validate(Object o,List<ValidationException> answer)throws Exception{
         Field[] fields=o.getClass().getDeclaredFields();
-        for(int i=0;i<fields.length;i++){
-            if(fields[i].isAnnotationPresent(this.getAnnotationClass())){
-                fields[i].setAccessible(true);
-                Annotation annotation=fields[i].getAnnotation(this.getAnnotationClass());
-                ValidationException exception=this.validate(fields[i].get(o),this.getAnnotationClass().cast(annotation));
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(this.getAnnotationClass())) {
+                field.setAccessible(true);
+                Annotation annotation = field.getAnnotation(this.getAnnotationClass());
+                ValidationException exception = this.validate(field.get(o), this.getAnnotationClass().cast(annotation));
                 if(exception!=null){
                     answer.add(exception);
                 }
