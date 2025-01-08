@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import javax.naming.AuthenticationException;
 import javax.servlet.http.Part;
 
 import mg.itu.prom16.annotation.field.Attribut;
@@ -16,6 +17,10 @@ import mg.itu.prom16.annotation.parameter.Param;
 import mg.itu.prom16.annotation.parameter.WinterFile;
 import mg.itu.prom16.annotation.type.Controller;
 import mg.itu.prom16.annotation.type.RestController;
+import mg.itu.prom16.winter.authentification.Authentificate;
+import mg.itu.prom16.winter.authentification.Authentificator;
+import mg.itu.prom16.winter.exception.WinterException;
+import mg.itu.prom16.winter.exception.running.ParamInjectionNotFoundException;
 import mg.itu.prom16.winter.exception.running.ParamNotFoundException;
 import mg.itu.prom16.winter.validation.generic.Validator;
 import mg.itu.prom16.winter.validation.generic.exception.ListValidationException;
@@ -82,7 +87,26 @@ public class Mapping {
         }
         return valiny;
     }
+    public void authentificate(Session session)throws Exception{
+        Authentificate authentificate=this.getMethod().getAnnotation(Authentificate.class);
+        Constructor<? extends Authentificator> constructor=(Constructor<? extends Authentificator>)authentificate.value().getConstructors()[0];
+        Class<?>[] classesParameter=constructor.getParameterTypes();
+        Object[] parameter=new Object[classesParameter.length];
+        for (int i=0;i<classesParameter.length;i++) {
+            if(classesParameter[i]==Session.class){
+                parameter[i]=session;
+            }
+            else{
+                throw new ParamInjectionNotFoundException();
+            }
+        }
+        Authentificator authentificator=constructor.newInstance(parameter);
+        authentificator.authentificate();
+    }
     public Object invokeMethod(HashMap<String,String> requestParameters,HashMap<String,Part> parts,Session session)throws Exception{
+        if(this.getMethod().isAnnotationPresent(Authentificate.class)){
+            this.authentificate(session);
+        }
         Constructor<?> constructeur=this.getController().getConstructor();
         Object obj=constructeur.newInstance();
         Field[] field = this.getController().getDeclaredFields();

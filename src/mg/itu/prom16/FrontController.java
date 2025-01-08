@@ -39,6 +39,7 @@ import mg.itu.prom16.winter.validation.generic.exception.ListValidationException
 import mg.itu.prom16.winter.Mapping;
 import mg.itu.prom16.winter.ModelAndView;
 import mg.itu.prom16.winter.Session;
+import mg.itu.prom16.winter.authentification.AuthentificationException;
 import mg.itu.prom16.winter.validation.annotation.IfNotValidated;
 
 @MultipartConfig
@@ -197,6 +198,13 @@ public class FrontController extends HttpServlet{
                     out.println(object);
                 }
             }
+        } catch (AuthentificationException e){
+            String redirect="redirect:";
+            if(e.getMessage().substring(0,redirect.length()).equals(redirect)){
+                response.sendRedirect(e.getMessage().substring(redirect.length(), e.getMessage().length()));
+                return;
+            }
+            out.println(e.generateWeb());
         } catch(ListValidationException e){
             try {
                 if (mapping.getMethod().isAnnotationPresent(IfNotValidated.class)) {
