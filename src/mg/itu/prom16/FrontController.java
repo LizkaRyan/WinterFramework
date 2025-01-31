@@ -22,8 +22,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
+import mg.itu.prom16.annotation.method.Get;
 import mg.itu.prom16.annotation.method.Post;
-import mg.itu.prom16.annotation.method.Url;
 import mg.itu.prom16.annotation.type.Controller;
 import mg.itu.prom16.annotation.type.RestController;
 import mg.itu.prom16.enumeration.Verb;
@@ -39,6 +39,7 @@ import mg.itu.prom16.winter.validation.generic.exception.ListValidationException
 import mg.itu.prom16.winter.Mapping;
 import mg.itu.prom16.winter.ModelAndView;
 import mg.itu.prom16.winter.Session;
+import mg.itu.prom16.winter.authentication.AuthenticationException;
 import mg.itu.prom16.winter.validation.annotation.IfNotValidated;
 
 @MultipartConfig
@@ -46,8 +47,6 @@ public class FrontController extends HttpServlet{
     String pack;
     HashMap<Verb,HashMap<String,Mapping>> hashMap;
     Session session=new Session();
-
-    protected static HashMap<Integer,String> methodTypeServlet;
 
     public void init()throws ServletException{
         super.init();
@@ -111,15 +110,15 @@ public class FrontController extends HttpServlet{
             Method[] methods=classes.get(i).getDeclaredMethods();
             for(int e=0;e<methods.length;e++){
                 Mapping newMapping = new Mapping(classes.get(i),methods[e]);
-                if(!methods[e].isAnnotationPresent(Url.class)){
+                if(!newMapping.isAController()){
                     continue;
                 }
                 String url=newMapping.getUrl();
                 if(methods[e].isAnnotationPresent(Post.class)){
                     testMappingException(newMapping, post, url);
-                    post.put(url,newMapping);
+                    post.put(url, newMapping);
                 }
-                else{
+                else if(methods[e].isAnnotationPresent(Get.class)){
                     testMappingException(newMapping, get, url);
                     get.put(url, newMapping);
                 }
@@ -197,6 +196,13 @@ public class FrontController extends HttpServlet{
                     out.println(object);
                 }
             }
+        } catch (AuthenticationException e){
+            String redirect="redirect:";
+            if(e.getMessage().substring(0,redirect.length()).equals(redirect)){
+                response.sendRedirect(e.getMessage().substring(redirect.length(), e.getMessage().length()));
+                return;
+            }
+            out.println(e.generateWeb());
         } catch(ListValidationException e){
             try {
                 if (mapping.getMethod().isAnnotationPresent(IfNotValidated.class)) {
