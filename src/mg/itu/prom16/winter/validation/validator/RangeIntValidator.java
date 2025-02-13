@@ -14,10 +14,10 @@ public class RangeIntValidator extends CustomValidator<RangeInt> {
     public ValidationException validate(Object t, RangeInt annotation) {
         int value=(int)t;
         if(value<annotation.min()){
-            return new RangeIntException(annotation.champ()+" doit etre superieur a "+annotation.min());
+            return new RangeIntException(annotation.field()+" doit etre superieur a "+annotation.min());
         }
         if(value>annotation.max()){
-            return new RangeIntException(annotation.champ()+" doit etre inferieur a "+annotation.max());
+            return new RangeIntException(annotation.field()+" doit etre inferieur a "+annotation.max());
         }
         return null;
     }

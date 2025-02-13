@@ -1,5 +1,6 @@
 package mg.itu.prom16;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -73,9 +74,10 @@ public class FrontController extends HttpServlet{
             while(resources.hasMoreElements()){
                 URL resource = resources.nextElement();
                 if(resource.getProtocol().equals("file")){
-                    File directory = new File(URLDecoder.decode(resource.getFile(),"UTF-8"));
+                    File directory = new File(URLDecoder.decode(resource.getFile(), StandardCharsets.UTF_8));
                     if(directory.exists() && directory.isDirectory()){
                         File[] files=directory.listFiles();
+                        assert files != null;
                         for(File file : files){
                             if(file.isFile() && file.getName().endsWith(".class")){
                                 String className = this.pack + '.' + file.getName().replace(".class","");
@@ -105,19 +107,19 @@ public class FrontController extends HttpServlet{
         HashMap<Verb,HashMap<String,Mapping>> valiny=new HashMap<Verb,HashMap<String,Mapping>>();
         HashMap<String,Mapping> post=new HashMap<String,Mapping>();
         HashMap<String,Mapping> get=new HashMap<String,Mapping>();
-        for(int i=0;i<classes.size();i++){
-            Method[] methods=classes.get(i).getDeclaredMethods();
-            for(int e=0;e<methods.length;e++){
-                Mapping newMapping = new Mapping(classes.get(i),methods[e]);
-                if(!newMapping.isAController()){
+        for (Class<?> aClass : classes) {
+            Method[] methods = aClass.getDeclaredMethods();
+            for (Method method : methods) {
+                Mapping newMapping = new Mapping(aClass, method);
+                if (!newMapping.isAController()) {
                     continue;
                 }
-                String url=newMapping.getUrl();
-                if(methods[e].isAnnotationPresent(Post.class)){
+                String url = newMapping.getUrl();
+                System.out.println(url);
+                if (method.isAnnotationPresent(Post.class)) {
                     testMappingException(newMapping, post, url);
                     post.put(url, newMapping);
-                }
-                else if(methods[e].isAnnotationPresent(Get.class)){
+                } else if (method.isAnnotationPresent(Get.class)) {
                     testMappingException(newMapping, get, url);
                     get.put(url, newMapping);
                 }
@@ -149,7 +151,7 @@ public class FrontController extends HttpServlet{
         return "";
     }
 
-    protected void executeMethod(HttpServletRequest request,HttpServletResponse response,Verb methodUsed)throws WinterException, IOException{
+    protected void executeMethod(HttpServletRequest request,HttpServletResponse response,Verb methodUsed)throws IOException{
         String url = getRequest(request.getRequestURI());
         PrintWriter out=response.getWriter();
         Mapping mapping=null;
@@ -181,24 +183,29 @@ public class FrontController extends HttpServlet{
     }
 
     protected void executeMethod(HttpServletRequest request, HttpServletResponse response,Mapping mapping,PrintWriter out)
-            throws WinterException, IOException {
+            throws IOException {
         try {
             if(mapping.isRest()){
                 restController(request, response,mapping,out);
             }
             else{
-                Object object=normalController(request,response,mapping,out);
-                if (object instanceof ModelAndView) {
-                    makeRequestDispatcher((ModelAndView)object, request).forward(request,response);
+                Object object=normalController(request,response,mapping);
+                if (object instanceof ModelAndView modelAndView) {
+                    makeRequestDispatcher(modelAndView, request).forward(request,response);
                 }
-                else {
+                else if(object instanceof String message){
+                    String redirect="redirect:";
+                    if(message.startsWith(redirect)){
+                        response.sendRedirect(message.substring(redirect.length()));
+                        return;
+                    }
                     out.println(object);
                 }
             }
         } catch (AuthenticationException e){
             String redirect="redirect:";
-            if(e.getMessage().substring(0,redirect.length()).equals(redirect)){
-                response.sendRedirect(e.getMessage().substring(redirect.length(), e.getMessage().length()));
+            if(e.getMessage().startsWith(redirect)){
+                response.sendRedirect(e.getMessage().substring(redirect.length()));
                 return;
             }
             out.println(e.generateWeb());
@@ -207,7 +214,7 @@ public class FrontController extends HttpServlet{
                 if (mapping.getMethod().isAnnotationPresent(IfNotValidated.class)) {
                     IfNotValidated ifNotValidated=mapping.getMethod().getAnnotation(IfNotValidated.class);
                     Mapping erreur=getMapping(ifNotValidated.url(), ifNotValidated.verb());
-                    ModelAndView modelAndView=(ModelAndView)normalController(request, response, erreur, out);
+                    ModelAndView modelAndView=(ModelAndView)normalController(request, response, erreur);
                     e.setError(modelAndView);
                     makeRequestDispatcher(modelAndView, request).forward(request,response);
                 }
@@ -273,32 +280,22 @@ public class FrontController extends HttpServlet{
     }
     protected void restController(HttpServletRequest request,HttpServletResponse response,Mapping mapping,PrintWriter out)throws Exception{
         response.setContentType("application/json;charset=UTF-8");
-        try {
-            this.session.setSession(request.getSession());
-            Object methodReturn=mapping.invokeMethod(getParameters(request),getParts(request),session);
-            String json="";
-            if(methodReturn instanceof ModelAndView){
-                ModelAndView modelAndView=(ModelAndView)methodReturn;
-                json=new Gson().toJson(modelAndView.getObjects());
-            }
-            else{
-                Gson gson=new Gson();
-                json=gson.toJson(methodReturn);
-            }
-            out.println(json);
-        } catch (Exception e) {
-            throw e;
+        this.session.setSession(request.getSession());
+        Object methodReturn=mapping.invokeMethod(getParameters(request),getParts(request),session);
+        String json="";
+        if(methodReturn instanceof ModelAndView modelAndView){
+            json=new Gson().toJson(modelAndView.getObjects());
         }
+        else{
+            Gson gson=new Gson();
+            json=gson.toJson(methodReturn);
+        }
+        out.println(json);
     }
     
-    protected Object normalController(HttpServletRequest request,HttpServletResponse response,Mapping mapping,PrintWriter out)throws Exception{
+    protected Object normalController(HttpServletRequest request,HttpServletResponse response,Mapping mapping)throws Exception{
         response.setContentType("text/html;charset=UTF-8");
-        try {
-            this.session.setSession(request.getSession());
-            Object methodReturn=mapping.invokeMethod(getParameters(request),getParts(request),session);
-            return methodReturn;
-        } catch (Exception e) {
-            throw e;
-        }
+        this.session.setSession(request.getSession());
+        return mapping.invokeMethod(getParameters(request),getParts(request),session);
     }
 }

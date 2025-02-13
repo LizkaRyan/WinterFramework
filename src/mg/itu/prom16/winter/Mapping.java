@@ -66,6 +66,9 @@ public class Mapping {
     }
 
     public static String addFirtSlash(String url) {
+        if(url.length()==0){
+            return "";
+        }
         if (url.charAt(0) != '/') {
             return "/" + url;
         }

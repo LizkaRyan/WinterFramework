@@ -74,6 +74,26 @@ public class TestController {
 NB: 
    - The framework only supports GET and POST verbs for now
 
+If you want to redirect, create a method that returns a String that starts with `redirect:` then the path that you want
+
+Here is an example:
+```java
+import mg.itu.prom16.winter.ModelAndView;
+import mg.itu.prom16.winter.annotation.method.Get;
+import mg.itu.prom16.winter.annotation.method.Post;
+import mg.itu.prom16.winter.annotation.parameter.Param;
+import mg.itu.prom16.winter.annotation.type.Controller;
+
+@Controller(mapping = "/test")
+public class TestController {
+    @Post
+    public String greet(){
+        return "redirect:/welcome";
+    }
+}
+```
+We redirect here to /welcome
+
 #### Warning
 - Don't assign a URL and verb pair to more than one method.
 - Controller's method should only return a String or a ModelAndView
