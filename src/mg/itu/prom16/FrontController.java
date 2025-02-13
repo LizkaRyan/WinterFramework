@@ -22,11 +22,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
-import mg.itu.prom16.annotation.method.Get;
-import mg.itu.prom16.annotation.method.Post;
-import mg.itu.prom16.annotation.type.Controller;
-import mg.itu.prom16.annotation.type.RestController;
-import mg.itu.prom16.enumeration.Verb;
+import mg.itu.prom16.winter.annotation.method.Get;
+import mg.itu.prom16.winter.annotation.method.Post;
+import mg.itu.prom16.winter.annotation.type.Controller;
+import mg.itu.prom16.winter.annotation.type.RestController;
+import mg.itu.prom16.winter.enumeration.Verb;
 import mg.itu.prom16.winter.exception.WinterException;
 import mg.itu.prom16.winter.exception.initializing.DuplicatedUrlException;
 import mg.itu.prom16.winter.exception.initializing.NoControllerFoundException;
@@ -38,7 +38,6 @@ import mg.itu.prom16.winter.exception.running.UrlNotFoundException;
 import mg.itu.prom16.winter.validation.generic.exception.ListValidationException;
 import mg.itu.prom16.winter.Mapping;
 import mg.itu.prom16.winter.ModelAndView;
-import mg.itu.prom16.winter.Session;
 import mg.itu.prom16.winter.authentication.AuthenticationException;
 import mg.itu.prom16.winter.validation.annotation.IfNotValidated;
 

@@ -1,4 +1,4 @@
-package mg.itu.prom16.annotation.method;
+package mg.itu.prom16.winter.annotation.method;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,6 +7,6 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface Post{
-    public String value();
+public @interface RestMethod {
+    
 }

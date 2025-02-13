@@ -9,14 +9,15 @@ import java.util.Set;
 
 import javax.servlet.http.Part;
 
-import mg.itu.prom16.annotation.field.Attribut;
-import mg.itu.prom16.annotation.method.Get;
-import mg.itu.prom16.annotation.method.Post;
-import mg.itu.prom16.annotation.method.RestMethod;
-import mg.itu.prom16.annotation.parameter.Param;
-import mg.itu.prom16.annotation.parameter.WinterFile;
-import mg.itu.prom16.annotation.type.Controller;
-import mg.itu.prom16.annotation.type.RestController;
+import mg.itu.prom16.Session;
+import mg.itu.prom16.winter.annotation.field.Attribut;
+import mg.itu.prom16.winter.annotation.method.Get;
+import mg.itu.prom16.winter.annotation.method.Post;
+import mg.itu.prom16.winter.annotation.method.RestMethod;
+import mg.itu.prom16.winter.annotation.parameter.Param;
+import mg.itu.prom16.winter.annotation.parameter.WinterFile;
+import mg.itu.prom16.winter.annotation.type.Controller;
+import mg.itu.prom16.winter.annotation.type.RestController;
 import mg.itu.prom16.winter.authentication.Authenticate;
 import mg.itu.prom16.winter.authentication.Authenticator;
 import mg.itu.prom16.winter.exception.running.ParamInjectionNotFoundException;
@@ -112,7 +113,7 @@ public class Mapping {
     }
 
 
-    public void authenticate(Session session) throws Exception {
+    public void authenticate(mg.itu.prom16.Session session) throws Exception {
         Authenticate authenticate = this.getAuthentication(Authenticate.class);
         if (authenticate == null) {
             return;
@@ -121,7 +122,7 @@ public class Mapping {
         Class<?>[] classesParameter = constructor.getParameterTypes();
         Object[] parameter = new Object[classesParameter.length];
         for (int i = 0; i < classesParameter.length; i++) {
-            if (classesParameter[i] == Session.class) {
+            if (classesParameter[i] == mg.itu.prom16.Session.class) {
                 parameter[i] = session;
             } else {
                 throw new ParamInjectionNotFoundException();
@@ -131,13 +132,13 @@ public class Mapping {
         authenticator.authentificate();
     }
 
-    public Object invokeMethod(HashMap<String, String> requestParameters, HashMap<String, Part> parts, Session session) throws Exception {
+    public Object invokeMethod(HashMap<String, String> requestParameters, HashMap<String, Part> parts, mg.itu.prom16.Session session) throws Exception {
         this.authenticate(session);
         Constructor<?> constructeur = this.getController().getConstructor();
         Object obj = constructeur.newInstance();
         Field[] field = this.getController().getDeclaredFields();
         for (int i = 0; i < field.length; i++) {
-            if (field[i].getType() == Session.class) {
+            if (field[i].getType() == mg.itu.prom16.Session.class) {
                 field[i].setAccessible(true);
                 field[i].set(obj, session);
             }
@@ -168,7 +169,7 @@ public class Mapping {
         return string;
     }
 
-    private Object getParameterValue(HashMap<String, String> requestParameters, HashMap<String, Part> parts, Parameter functionParameter, String nameParameter, Session session) throws Exception {
+    private Object getParameterValue(HashMap<String, String> requestParameters, HashMap<String, Part> parts, Parameter functionParameter, String nameParameter, mg.itu.prom16.Session session) throws Exception {
         Class<?> classe = functionParameter.getType();
         if (classe.isPrimitive() || classe == String.class) {
             if (functionParameter.isAnnotationPresent(Param.class)) {

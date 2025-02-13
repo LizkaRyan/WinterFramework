@@ -14,5 +14,5 @@ import mg.itu.prom16.winter.validation.validator.RangeIntValidator;
 public @interface RangeInt {
     int min() default Integer.MIN_VALUE;
     int max() default Integer.MAX_VALUE;
-    String champ();
+    String field();
 }
