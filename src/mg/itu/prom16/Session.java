@@ -1,16 +1,16 @@
-package mg.itu.prom16.winter;
+package mg.itu.prom16;
 
 import javax.servlet.http.HttpSession;
 
 public class Session {
     protected HttpSession session;
-    public Session(){
+    Session(){
         
     }
-    public Session(HttpSession session){
+    Session(HttpSession session){
         this.session=session;
     }
-    public void setSession(HttpSession session){
+    void setSession(HttpSession session){
         this.session=session;
     }
     public void add(String key,Object value){

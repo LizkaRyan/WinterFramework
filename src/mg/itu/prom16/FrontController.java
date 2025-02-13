@@ -38,7 +38,6 @@ import mg.itu.prom16.winter.exception.running.UrlNotFoundException;
 import mg.itu.prom16.winter.validation.generic.exception.ListValidationException;
 import mg.itu.prom16.winter.Mapping;
 import mg.itu.prom16.winter.ModelAndView;
-import mg.itu.prom16.winter.Session;
 import mg.itu.prom16.winter.authentication.AuthenticationException;
 import mg.itu.prom16.winter.validation.annotation.IfNotValidated;
 

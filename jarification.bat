@@ -2,7 +2,7 @@
 setlocal
 
 rem Définir le nom du projet
-set "projet=winter-framework"
+set "projet=framework"
 
 rem Définir le chemin d'accès au répertoire des sources et au répertoire de destination des fichiers compilés
 set "src=.\src"
