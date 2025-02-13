@@ -1,4 +1,4 @@
-package mg.itu.prom16.enumeration;
+package mg.itu.prom16.winter.enumeration;
 
 public enum Verb {
     GET,

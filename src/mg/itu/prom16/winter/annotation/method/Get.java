@@ -1,4 +1,4 @@
-package mg.itu.prom16.annotation.type;
+package mg.itu.prom16.winter.annotation.method;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface Controller{
-    String mapping() default "";
+@Target(ElementType.METHOD)
+public @interface Get{
+    public String value();
 }

@@ -9,14 +9,14 @@ import java.util.Set;
 
 import javax.servlet.http.Part;
 
-import mg.itu.prom16.annotation.field.Attribut;
-import mg.itu.prom16.annotation.method.Get;
-import mg.itu.prom16.annotation.method.Post;
-import mg.itu.prom16.annotation.method.RestMethod;
-import mg.itu.prom16.annotation.parameter.Param;
-import mg.itu.prom16.annotation.parameter.WinterFile;
-import mg.itu.prom16.annotation.type.Controller;
-import mg.itu.prom16.annotation.type.RestController;
+import mg.itu.prom16.winter.annotation.field.Attribut;
+import mg.itu.prom16.winter.annotation.method.Get;
+import mg.itu.prom16.winter.annotation.method.Post;
+import mg.itu.prom16.winter.annotation.method.RestMethod;
+import mg.itu.prom16.winter.annotation.parameter.Param;
+import mg.itu.prom16.winter.annotation.parameter.WinterFile;
+import mg.itu.prom16.winter.annotation.type.Controller;
+import mg.itu.prom16.winter.annotation.type.RestController;
 import mg.itu.prom16.winter.authentication.Authenticate;
 import mg.itu.prom16.winter.authentication.Authenticator;
 import mg.itu.prom16.winter.exception.running.ParamInjectionNotFoundException;

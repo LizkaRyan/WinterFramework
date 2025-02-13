@@ -1,4 +1,4 @@
-package mg.itu.prom16.annotation.method;
+package mg.itu.prom16.winter.annotation.parameter;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface Get{
-    public String value();
+@Target({ElementType.PARAMETER})
+public @interface WinterFile {
+    String name();
 }
