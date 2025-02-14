@@ -63,44 +63,50 @@ public class FrontController extends HttpServlet{
     }
 
     private List<Class<?>> getClassesInPackage(String packageName) throws WinterException {
-        List<Class<?>> classes = new ArrayList<Class<?>>();
-        ClassLoader classLoader=Thread.currentThread().getContextClassLoader();
+        List<Class<?>> classes = new ArrayList<>();
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         String path = packageName.replace(".", "/");
-        try{
+        try {
             Enumeration<URL> resources = classLoader.getResources(path);
-            if(!resources.hasMoreElements()){
+            if (!resources.hasMoreElements()) {
                 throw new PackageNotFoundException(packageName);
             }
-            while(resources.hasMoreElements()){
+            while (resources.hasMoreElements()) {
                 URL resource = resources.nextElement();
-                if(resource.getProtocol().equals("file")){
+                if (resource.getProtocol().equals("file")) {
                     File directory = new File(URLDecoder.decode(resource.getFile(), StandardCharsets.UTF_8));
-                    if(directory.exists() && directory.isDirectory()){
-                        File[] files=directory.listFiles();
-                        assert files != null;
-                        for(File file : files){
-                            if(file.isFile() && file.getName().endsWith(".class")){
-                                String className = this.pack + '.' + file.getName().replace(".class","");
-                                Class<?> clazz=Class.forName(className);
-                                if(clazz.isAnnotationPresent(Controller.class) || clazz.isAnnotationPresent(RestController.class)){
-                                    classes.add(clazz);
-                                }
-                            }
-                        }
-                        if(classes.size()==0){
-                            throw new NoControllerFoundException(this.pack);
-                        }
+                    if (directory.exists() && directory.isDirectory()) {
+                        addClassesFromDirectory(directory, packageName, classes);
+                    }
+                }
+            }
+            if (classes.isEmpty()) {
+                throw new NoControllerFoundException(packageName);
+            }
+        } catch (WinterException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return classes;
+    }
+    
+    private void addClassesFromDirectory(File directory, String packageName, List<Class<?>> classes) throws ClassNotFoundException {
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    // Parcourir récursivement les sous-dossiers
+                    addClassesFromDirectory(file, packageName + "." + file.getName(), classes);
+                } else if (file.isFile() && file.getName().endsWith(".class")) {
+                    String className = packageName + '.' + file.getName().replace(".class", "");
+                    Class<?> clazz = Class.forName(className);
+                    if (clazz.isAnnotationPresent(Controller.class) || clazz.isAnnotationPresent(RestController.class)) {
+                        classes.add(clazz);
                     }
                 }
             }
         }
-        catch(WinterException ex){
-            throw ex;
-        }
-        catch(Exception ex){
-            ex.printStackTrace();
-        }
-        return classes;
     }
 
     public HashMap<Verb,HashMap<String,Mapping>> initializeHashMap(List<Class<?>> classes)throws DuplicatedUrlException,ReturnTypeException{
