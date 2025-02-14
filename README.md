@@ -374,7 +374,7 @@ public @interface NotBlank {
     String message();
 }
 ```
-- Step 2) Create a class that extends `ConstraintValidator<T>` where T is the annotation that we created to validate which is `@NotBlank`.
+- Step 2) Create a class that extends `CustomValidator<T>` where T is the annotation that we created to validate which is `@NotBlank`.
 ```java
 import mg.itu.prom16.winter.validation.annotation.RangeInt;
 import mg.itu.prom16.winter.validation.exception.RangeIntException;
