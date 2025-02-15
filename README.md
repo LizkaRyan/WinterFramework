@@ -98,6 +98,26 @@ We redirect here to /welcome
 - Don't assign a URL and verb pair to more than one method.
 - Controller's method should only return a String or a ModelAndView
 
+#### Optional
+
+You can set a base path for your views in the configuration file (web.xml):
+
+```xml
+<init-param>
+    <param-name>views.prefix</param-name>
+    <param-value>views</param-value>
+</init-param>
+```
+
+You can also specify the suffix of your views:
+
+```xml
+<init-param>
+    <param-name>views.suffix</param-name>
+    <param-value>.jsp</param-value>
+</init-param>
+```
+
 b) binding
 Use `@Param` to extract query parameters from the URL.
 Example:
@@ -436,6 +456,31 @@ public class StudentAuthenticator  implements Authenticator{
     }
 }
 ```
+
+If you want to redirect the user if there's an AuthenticationException, You put `redirect:` as we did with an controller
+
+```java
+import mg.itu.prom16.Session;
+import mg.itu.prom16.winter.authentication.AuthenticationException;
+import mg.itu.prom16.winter.authentication.Authenticator;
+
+public class StudentAuthenticator  implements Authenticator{
+
+    Session session;
+
+    public StudentAuthenticator(Session session){
+        this.session=session;
+    }
+
+    @Override
+    public void authentificate() throws AuthenticationException {
+        if((String)session.get("etudiant")==null){
+            throw new AuthenticationException("redirect:/index");
+        }
+    }
+}
+```
+
 #### Step 2) Put the annotation `@Authenticate` in the class controller or the method.
 ```java
 import mg.itu.prom16.winter.ModelAndView;
