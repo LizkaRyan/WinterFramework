@@ -1,4 +1,4 @@
-package mg.itu.prom16;
+package mg.itu.prom16.winter;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -302,6 +302,6 @@ public class FrontController extends HttpServlet{
     protected Object normalController(HttpServletRequest request,HttpServletResponse response,Mapping mapping)throws Exception{
         response.setContentType("text/html;charset=UTF-8");
         this.session.setSession(request.getSession());
-        return mapping.invokeMethod(getParameters(request),getParts(request),session);
+        return mapping.invokeMethod(getParameters(request),getParts(request),this.session);
     }
 }
