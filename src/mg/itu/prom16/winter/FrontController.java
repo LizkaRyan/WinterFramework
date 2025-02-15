@@ -37,8 +37,6 @@ import mg.itu.prom16.winter.exception.initializing.ReturnTypeException;
 import mg.itu.prom16.winter.exception.running.MethodException;
 import mg.itu.prom16.winter.exception.running.UrlNotFoundException;
 import mg.itu.prom16.winter.validation.generic.exception.ListValidationException;
-import mg.itu.prom16.winter.Mapping;
-import mg.itu.prom16.winter.ModelAndView;
 import mg.itu.prom16.winter.authentication.AuthenticationException;
 import mg.itu.prom16.winter.validation.annotation.IfNotValidated;
 
@@ -47,6 +45,9 @@ public class FrontController extends HttpServlet{
     String pack;
     HashMap<Verb,HashMap<String,Mapping>> hashMap;
     Session session=new Session();
+
+    private static String prefix;
+    private static String suffix;
 
     public void init()throws ServletException{
         super.init();
@@ -57,6 +58,14 @@ public class FrontController extends HttpServlet{
         this.pack=this.getInitParameter("controllerPackage");
         if(this.pack==null){
             throw new PackageXmlNotFoundException();
+        }
+        prefix =this.getInitParameter("views.prefix");
+        if(prefix ==null){
+            prefix ="";
+        }
+        suffix=this.getInitParameter("views.suffix");
+        if(suffix==null){
+            suffix="";
         }
         List<Class<?>> listes=getClassesInPackage(this.pack);
         this.hashMap=this.initializeHashMap(listes);
@@ -282,7 +291,7 @@ public class FrontController extends HttpServlet{
         for(String key:objectsToAdd.keySet()){
             request.setAttribute(key, objectsToAdd.get(key));
         }
-        return request.getRequestDispatcher(modelAndView.getUrl());
+        return request.getRequestDispatcher(prefix + "/" + modelAndView.getUrl()+suffix);
     }
     protected void restController(HttpServletRequest request,HttpServletResponse response,Mapping mapping,PrintWriter out)throws Exception{
         response.setContentType("application/json;charset=UTF-8");

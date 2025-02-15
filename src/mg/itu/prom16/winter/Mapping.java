@@ -55,6 +55,9 @@ public class Mapping {
     }
 
     public static String dropFirtSlash(String url) {
+        if(url.length()==0){
+            return url;
+        }
         if (url.charAt(0) == '/') {
             return url.substring(1);
         }
