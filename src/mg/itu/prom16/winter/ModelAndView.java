@@ -21,7 +21,8 @@ public class ModelAndView{
     public void setObjects(HashMap<String, Object> objects) {
         this.objects = objects;
     }
-    public void addObject(String key,Object object){
+    public ModelAndView addObject(String key,Object object){
         this.objects.put(key,object);
+        return this;
     }
 }
