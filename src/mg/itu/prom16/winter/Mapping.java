@@ -1,7 +1,6 @@
 package mg.itu.prom16.winter;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
+import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,9 +24,6 @@ import mg.itu.prom16.winter.validation.generic.Validator;
 import mg.itu.prom16.winter.validation.generic.exception.ListValidationException;
 import mg.itu.prom16.winter.validation.generic.exception.ValidationException;
 import mg.itu.prom16.winter.Session;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 
 public class Mapping {
     Class<?> controller;
@@ -140,8 +136,7 @@ public class Mapping {
 
     public Object invokeMethod(HashMap<String, String> requestParameters, HashMap<String, Part> parts, mg.itu.prom16.winter.Session session) throws Exception {
         this.authenticate(session);
-        Constructor<?> constructeur = this.getController().getConstructor();
-        Object obj = constructeur.newInstance();
+        Object obj=this.getControllerInstance(session);
         Field[] field = this.getController().getDeclaredFields();
         for (int i = 0; i < field.length; i++) {
             if (field[i].getType() == Session.class) {
@@ -157,6 +152,21 @@ public class Mapping {
         }
         Object[] parameterValues = parametersValue.toArray();
         return method.invoke(obj, parameterValues);
+    }
+
+    public Object getControllerInstance(Session session) throws NoSuchMethodException, InstantiationException, InvocationTargetException, IllegalAccessException {
+        Constructor<?>[] constructeur = this.getController().getConstructors();
+        Parameter[] parameters=constructeur[0].getParameters();
+        Object[] parameterValue=new Object[parameters.length];
+        for (int i=0;i< parameters.length;i++){
+            if(parameters[i].getType() == Session.class){
+                parameterValue[i]=session;
+            }
+            else{
+                parameterValue[i]=null;
+            }
+        }
+        return constructeur[0].newInstance(parameterValue);
     }
 
     private static Object getPrimitive(Class<?> classe, String string) {
