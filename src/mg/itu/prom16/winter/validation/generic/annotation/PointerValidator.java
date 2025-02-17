@@ -10,5 +10,5 @@ import mg.itu.prom16.winter.validation.generic.CustomValidator;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface PointerValidator {
-    Class<? extends CustomValidator<?>> value();
+    Class<? extends CustomValidator<?,?>> value();
 }

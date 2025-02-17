@@ -38,7 +38,7 @@ import mg.itu.prom16.winter.exception.running.MethodException;
 import mg.itu.prom16.winter.exception.running.UrlNotFoundException;
 import mg.itu.prom16.winter.validation.generic.exception.ListValidationException;
 import mg.itu.prom16.winter.authentication.AuthenticationException;
-import mg.itu.prom16.winter.validation.annotation.IfNotValidated;
+import mg.itu.prom16.winter.validation.generic.annotation.IfNotValidated;
 
 @MultipartConfig
 public class FrontController extends HttpServlet{
@@ -130,7 +130,6 @@ public class FrontController extends HttpServlet{
                     continue;
                 }
                 String url = newMapping.getUrl();
-                System.out.println(url);
                 if (method.isAnnotationPresent(Post.class)) {
                     testMappingException(newMapping, post, url);
                     post.put(url, newMapping);

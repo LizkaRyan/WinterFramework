@@ -5,14 +5,10 @@ import mg.itu.prom16.winter.validation.exception.RequiredException;
 import mg.itu.prom16.winter.validation.generic.CustomValidator;
 import mg.itu.prom16.winter.validation.generic.exception.ValidationException;
 
-public class RequiredValidator extends CustomValidator<Required> {
-
-    public RequiredValidator(){
-        super(Required.class);
-    }
+public class RequiredValidator extends CustomValidator<Required,String> {
 
     @Override
-    public ValidationException validate(Object o,Required required) {
+    public ValidationException validate(String o,Required required) {
         if(o==null){
             return new RequiredException(required.message());
         }

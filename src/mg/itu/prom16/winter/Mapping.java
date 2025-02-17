@@ -1,6 +1,8 @@
 package mg.itu.prom16.winter;
 
 import java.lang.reflect.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -137,13 +139,6 @@ public class Mapping {
     public Object invokeMethod(HashMap<String, String> requestParameters, HashMap<String, Part> parts, mg.itu.prom16.winter.Session session) throws Exception {
         this.authenticate(session);
         Object obj=this.getControllerInstance(session);
-        Field[] field = this.getController().getDeclaredFields();
-        for (int i = 0; i < field.length; i++) {
-            if (field[i].getType() == Session.class) {
-                field[i].setAccessible(true);
-                field[i].set(obj, session);
-            }
-        }
         String[] parameterNames = this.getParameterName();
         Parameter[] functionParameters = this.method.getParameters();
         List<Object> parametersValue = new ArrayList<Object>();
@@ -169,7 +164,7 @@ public class Mapping {
         return constructeur[0].newInstance(parameterValue);
     }
 
-    private static Object getPrimitive(Class<?> classe, String string) {
+    private static Object getStringValueByClass(Class<?> classe, String string) {
         if (classe == int.class) {
             return Integer.parseInt(string);
         }
@@ -182,6 +177,12 @@ public class Mapping {
         if (classe == Long.class) {
             return Long.parseLong(string);
         }
+        if (classe == LocalDate.class){
+            return LocalDate.parse(string);
+        }
+        if (classe == LocalDateTime.class){
+            return LocalDateTime.parse(string);
+        }
         return string;
     }
 
@@ -190,7 +191,7 @@ public class Mapping {
         if (classe.isPrimitive() || classe == String.class) {
             if (functionParameter.isAnnotationPresent(Param.class)) {
                 Param param = functionParameter.getAnnotation(Param.class);
-                return getPrimitive(functionParameter.getType(), requestParameters.get(param.name()));
+                return getStringValueByClass(functionParameter.getType(), requestParameters.get(param.name()));
             }
             throw new ParamNotFoundException();
         } else if (classe == Session.class) {
@@ -251,7 +252,7 @@ public class Mapping {
         try {
             Method setter = getSetter(object, setters, attribut);
             Parameter[] parameter = setter.getParameters();
-            Object valeur = getPrimitive(parameter[0].getType(), value);
+            Object valeur = getStringValueByClass(parameter[0].getType(), value);
             setter.invoke(object, valeur);
         } catch (Exception e) {
             e.printStackTrace();

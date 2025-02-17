@@ -1,4 +1,4 @@
-package mg.itu.prom16.winter.validation.annotation;
+package mg.itu.prom16.winter.validation.generic.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

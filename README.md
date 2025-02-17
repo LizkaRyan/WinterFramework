@@ -167,7 +167,7 @@ public class User {
 }
 ```
 NB:
-   - Parameter binding only supports primitive class, Date or Object having fields of the precedent type.
+   - Parameter binding only supports primitive class, LocalDate, LocalDateTime or Object having fields of the precedent type.
    - If no binding can be applied then the parameter will be set to a string.
    - Object's class must contain an empty constructor
 
@@ -322,8 +322,7 @@ public class TestController {
 - You can validate the parameters and their fields using the following annotations:
     - `RangeInt(min,max,field)`
     - `Required`
-
-   Note that you don't have to specify the field value. You have to specify with the `@IfNotValidated` annotation where the user should be redirected in case a validation error occurs
+    - `RangeDouble(min,max,field)`
 
 Controller:
 
@@ -332,7 +331,7 @@ import mg.itu.prom16.winter.ModelAndView;
 import mg.itu.prom16.winter.annotation.method.Get;
 import mg.itu.prom16.winter.annotation.parameter.Param;
 import mg.itu.prom16.winter.annotation.type.Controller;
-import mg.itu.prom16.winter.validation.annotation.IfNotValidated;
+import mg.itu.prom16.winter.validation.generic.annotation.IfNotValidated;
 
 @Controller
 public class TestController {
@@ -394,22 +393,18 @@ public @interface NotBlank {
     String message();
 }
 ```
-- Step 2) Create a class that extends `CustomValidator<T>` where T is the annotation that we created to validate which is `@NotBlank`.
+- Step 2) Create a class that extends `CustomValidator<A,T>` where A is the annotation that we created to validate which is `@NotBlank` and T is the type of the object which is String in our case.
 ```java
 import mg.itu.prom16.winter.validation.annotation.RangeInt;
 import mg.itu.prom16.winter.validation.exception.RangeIntException;
 import mg.itu.prom16.winter.validation.generic.CustomValidator;
 import mg.itu.prom16.winter.validation.generic.exception.ValidationException;
 
-public class NotBlankValidator extends CustomValidator<NotBlank> {
-    public RangeDoubleValidator(){
-        super(NotBlank.class);
-    }
+public class NotBlankValidator extends CustomValidator<NotBlank,String> {
 
     @Override
-    public ValidationException validate(Object t, NotBlank annotation) {
-        String value=(String)t;
-        if(value.equals("")){
+    public ValidationException validate(String t, NotBlank annotation) {
+        if(t.equals("")){
             return ValidationException(annotation.message());
         }
         return null;
