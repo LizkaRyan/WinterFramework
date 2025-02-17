@@ -1,18 +1,10 @@
 package mg.itu.prom16.winter.validation.generic.exception;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import mg.itu.prom16.winter.Mapping;
 import mg.itu.prom16.winter.ModelAndView;
 import mg.itu.prom16.winter.exception.WinterException;
-import mg.itu.prom16.winter.validation.annotation.IfNotValidated;
 
 public class ListValidationException extends WinterException {
     List<ValidationException> validations;
