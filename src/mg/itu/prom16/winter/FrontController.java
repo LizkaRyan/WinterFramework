@@ -1,6 +1,7 @@
 package mg.itu.prom16.winter;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -165,8 +166,32 @@ public class FrontController extends HttpServlet{
         return "";
     }
 
+    private void serveStaticResource(String path, HttpServletResponse response) throws IOException {
+        // Le chemin absolu vers le répertoire des ressources statiques
+        String staticDirectory = getServletContext().getRealPath("/public");
+        path=path.replace("public/","\\");
+        // Résoudre le fichier demandé
+        File file = new File(staticDirectory, path);
+
+        if (file.exists()) {
+            // Détecter le type MIME du fichier
+            String mimeType = getServletContext().getMimeType(file.getName());
+            response.setContentType(mimeType);
+
+            // Envoyer le fichier en réponse
+            Files.copy(file.toPath(), response.getOutputStream());
+        } else {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+        }
+    }
+
     protected void executeMethod(HttpServletRequest request,HttpServletResponse response,Verb methodUsed)throws IOException{
         String url = getRequest(request.getRequestURI());
+        if(url.startsWith("public/")){
+            System.out.println("Est un fichier!");
+            serveStaticResource(url,response);
+            return;
+        }
         PrintWriter out=response.getWriter();
         Mapping mapping=null;
         try {
