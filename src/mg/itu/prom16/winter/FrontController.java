@@ -50,6 +50,8 @@ public class FrontController extends HttpServlet{
     private static String prefix;
     private static String suffix;
 
+    private static String staticFileDirectory;
+
     public void init()throws ServletException{
         super.init();
         scan();
@@ -67,6 +69,10 @@ public class FrontController extends HttpServlet{
         suffix=this.getInitParameter("views.suffix");
         if(suffix==null){
             suffix="";
+        }
+        staticFileDirectory=this.getInitParameter("static.file.directory");
+        if(staticFileDirectory==null){
+            staticFileDirectory="public";
         }
         List<Class<?>> listes=getClassesInPackage(this.pack);
         this.hashMap=this.initializeHashMap(listes);
@@ -168,8 +174,8 @@ public class FrontController extends HttpServlet{
 
     private void serveStaticResource(String path, HttpServletResponse response) throws IOException {
         // Le chemin absolu vers le répertoire des ressources statiques
-        String staticDirectory = getServletContext().getRealPath("/public");
-        path=path.replace("public/","\\");
+        String staticDirectory = getServletContext().getRealPath("/"+staticFileDirectory);
+        path=path.replace(staticFileDirectory+"/","\\");
         // Résoudre le fichier demandé
         File file = new File(staticDirectory, path);
 
@@ -187,8 +193,7 @@ public class FrontController extends HttpServlet{
 
     protected void executeMethod(HttpServletRequest request,HttpServletResponse response,Verb methodUsed)throws IOException{
         String url = getRequest(request.getRequestURI());
-        if(url.startsWith("public/")){
-            System.out.println("Est un fichier!");
+        if(url.startsWith(staticFileDirectory+"/")){
             serveStaticResource(url,response);
             return;
         }
