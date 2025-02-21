@@ -2,11 +2,7 @@ package mg.itu.prom16.winter;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -289,14 +285,42 @@ public class FrontController extends HttpServlet{
         executeMethod(request,response,Verb.POST);
     }
 
-    protected static HashMap<String,String> getParameters(HttpServletRequest request){
+    protected static Map<String,Object> getParameters(HttpServletRequest request){
         HashMap<String,String> valiny=new HashMap<String,String>();
         Enumeration<String> parametres=request.getParameterNames();
         while(parametres.hasMoreElements()){
             String parametre=parametres.nextElement();
             valiny.put(parametre,request.getParameter(parametre));
         }
-        return valiny;
+        return convertToNestedMap(valiny);
+    }
+
+    public static Map<String, Object> convertToNestedMap(Map<String, String> flatMap) {
+        Map<String, Object> nestedMap = new HashMap<>();
+
+        for (Map.Entry<String, String> entry : flatMap.entrySet()) {
+            String[] keys = entry.getKey().split("\\.");
+            insertIntoNestedMap(nestedMap, keys, entry.getValue(), 0);
+        }
+
+        return nestedMap;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void insertIntoNestedMap(Map<String, Object> currentMap, String[] keys, Object value, int index) {
+        String key = keys[index];
+
+        if (index == keys.length - 1) {
+            // Base case: insert the value
+            currentMap.put(key, value);
+            return;
+        }
+
+        // Recursive case: get or create the next map level
+        currentMap.putIfAbsent(key, new HashMap<>());
+        Map<String, Object> nextMap = (Map<String, Object>) currentMap.get(key);
+
+        insertIntoNestedMap(nextMap, keys, value, index + 1);
     }
 
     protected static HashMap<String,Part> getParts(HttpServletRequest request)throws Exception{
