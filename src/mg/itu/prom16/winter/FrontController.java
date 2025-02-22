@@ -2,11 +2,7 @@ package mg.itu.prom16.winter;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -19,10 +15,7 @@ import com.google.gson.Gson;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.Part;
+import javax.servlet.http.*;
 
 import mg.itu.prom16.winter.annotation.method.Get;
 import mg.itu.prom16.winter.annotation.method.Post;
@@ -45,7 +38,6 @@ import mg.itu.prom16.winter.validation.generic.annotation.IfNotValidated;
 public class FrontController extends HttpServlet{
     String pack;
     HashMap<Verb,HashMap<String,Mapping>> hashMap;
-    Session session=new Session();
 
     private static String prefix;
     private static String suffix;
@@ -206,6 +198,9 @@ public class FrontController extends HttpServlet{
             return;
         }
         executeMethod(request, response,mapping,out);
+        HttpSession session=request.getSession();
+        session.setAttribute("winter.url",url);
+        session.setAttribute("winter.verb",methodUsed);
         out.close();
     }
 
@@ -255,16 +250,19 @@ public class FrontController extends HttpServlet{
             out.println(e.generateWeb());
         } catch(ListValidationException e){
             try {
+                HttpSession session=request.getSession();
+                String url=(String)session.getAttribute("winter.url");
+                Verb verb=(Verb)session.getAttribute("winter.verb");
                 if (mapping.getMethod().isAnnotationPresent(IfNotValidated.class)) {
                     IfNotValidated ifNotValidated=mapping.getMethod().getAnnotation(IfNotValidated.class);
-                    Mapping erreur=getMapping(ifNotValidated.url(), ifNotValidated.verb());
-                    ModelAndView modelAndView=(ModelAndView)normalController(request, response, erreur);
-                    e.setError(modelAndView);
-                    makeRequestDispatcher(modelAndView, request).forward(request,response);
+                    url= ifNotValidated.url();
+                    verb=ifNotValidated.verb();
                 }
-                else {
-                    out.println(e.generateWeb());
-                }
+                Mapping erreur=getMapping(url,verb);
+                System.out.println(url);
+                ModelAndView modelAndView=(ModelAndView)normalController(request, response, erreur);
+                e.setError(modelAndView);
+                makeRequestDispatcher(modelAndView, request).forward(request,response);
             } catch (Exception ex) {
                 out.println(WinterException.generateWeb(ex));
             }
@@ -289,14 +287,42 @@ public class FrontController extends HttpServlet{
         executeMethod(request,response,Verb.POST);
     }
 
-    protected static HashMap<String,String> getParameters(HttpServletRequest request){
+    protected static Map<String,Object> getParameters(HttpServletRequest request){
         HashMap<String,String> valiny=new HashMap<String,String>();
         Enumeration<String> parametres=request.getParameterNames();
         while(parametres.hasMoreElements()){
             String parametre=parametres.nextElement();
             valiny.put(parametre,request.getParameter(parametre));
         }
-        return valiny;
+        return convertToNestedMap(valiny);
+    }
+
+    public static Map<String, Object> convertToNestedMap(Map<String, String> flatMap) {
+        Map<String, Object> nestedMap = new HashMap<>();
+
+        for (Map.Entry<String, String> entry : flatMap.entrySet()) {
+            String[] keys = entry.getKey().split("\\.");
+            insertIntoNestedMap(nestedMap, keys, entry.getValue(), 0);
+        }
+
+        return nestedMap;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void insertIntoNestedMap(Map<String, Object> currentMap, String[] keys, Object value, int index) {
+        String key = keys[index];
+
+        if (index == keys.length - 1) {
+            // Base case: insert the value
+            currentMap.put(key, value);
+            return;
+        }
+
+        // Recursive case: get or create the next map level
+        currentMap.putIfAbsent(key, new HashMap<>());
+        Map<String, Object> nextMap = (Map<String, Object>) currentMap.get(key);
+
+        insertIntoNestedMap(nextMap, keys, value, index + 1);
     }
 
     protected static HashMap<String,Part> getParts(HttpServletRequest request)throws Exception{
@@ -324,8 +350,7 @@ public class FrontController extends HttpServlet{
     }
     protected void restController(HttpServletRequest request,HttpServletResponse response,Mapping mapping,PrintWriter out)throws Exception{
         response.setContentType("application/json;charset=UTF-8");
-        this.session.setSession(request.getSession());
-        Object methodReturn=mapping.invokeMethod(getParameters(request),getParts(request),session);
+        Object methodReturn=mapping.invokeMethod(getParameters(request),getParts(request),new Session(request.getSession()));
         String json="";
         if(methodReturn instanceof ModelAndView modelAndView){
             json=new Gson().toJson(modelAndView.getObjects());
@@ -339,7 +364,6 @@ public class FrontController extends HttpServlet{
     
     protected Object normalController(HttpServletRequest request,HttpServletResponse response,Mapping mapping)throws Exception{
         response.setContentType("text/html;charset=UTF-8");
-        this.session.setSession(request.getSession());
-        return mapping.invokeMethod(getParameters(request),getParts(request),this.session);
+        return mapping.invokeMethod(getParameters(request),getParts(request),new Session(request.getSession()));
     }
 }

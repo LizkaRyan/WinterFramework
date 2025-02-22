@@ -3,10 +3,7 @@ package mg.itu.prom16.winter;
 import java.lang.reflect.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import javax.servlet.http.Part;
 
@@ -53,7 +50,7 @@ public class Mapping {
     }
 
     public static String dropFirtSlash(String url) {
-        if(url.length()==0){
+        if (url.length() == 0) {
             return url;
         }
         if (url.charAt(0) == '/') {
@@ -62,12 +59,12 @@ public class Mapping {
         return url;
     }
 
-    public boolean isAController(){
+    public boolean isAController() {
         return this.method.isAnnotationPresent(Post.class) || this.method.isAnnotationPresent(Get.class);
     }
 
     public static String addFirtSlash(String url) {
-        if(url.length()==0){
+        if (url.length() == 0) {
             return "";
         }
         if (url.charAt(0) != '/') {
@@ -136,9 +133,9 @@ public class Mapping {
         authenticator.authentificate();
     }
 
-    public Object invokeMethod(HashMap<String, String> requestParameters, HashMap<String, Part> parts, mg.itu.prom16.winter.Session session) throws Exception {
+    public Object invokeMethod(Map<String, Object> requestParameters, HashMap<String, Part> parts, mg.itu.prom16.winter.Session session) throws Exception {
         this.authenticate(session);
-        Object obj=this.getControllerInstance(session);
+        Object obj = this.getControllerInstance(session);
         String[] parameterNames = this.getParameterName();
         Parameter[] functionParameters = this.method.getParameters();
         List<Object> parametersValue = new ArrayList<Object>();
@@ -151,51 +148,30 @@ public class Mapping {
 
     public Object getControllerInstance(Session session) throws NoSuchMethodException, InstantiationException, InvocationTargetException, IllegalAccessException {
         Constructor<?>[] constructeur = this.getController().getConstructors();
-        Parameter[] parameters=constructeur[0].getParameters();
-        Object[] parameterValue=new Object[parameters.length];
-        for (int i=0;i< parameters.length;i++){
-            if(parameters[i].getType() == Session.class){
-                parameterValue[i]=session;
-            }
-            else{
-                parameterValue[i]=null;
+        Parameter[] parameters = constructeur[0].getParameters();
+        Object[] parameterValue = new Object[parameters.length];
+        for (int i = 0; i < parameters.length; i++) {
+            if (parameters[i].getType() == Session.class) {
+                parameterValue[i] = session;
+            } else {
+                parameterValue[i] = null;
             }
         }
         return constructeur[0].newInstance(parameterValue);
     }
 
-    private static Object getStringValueByClass(Class<?> classe, String string) {
-        if (classe == int.class) {
-            return Integer.parseInt(string);
-        }
-        if (classe == double.class) {
-            return Double.parseDouble(string);
-        }
-        if (classe == float.class) {
-            return Float.parseFloat(string);
-        }
-        if (classe == Long.class) {
-            return Long.parseLong(string);
-        }
-        if (classe == LocalDate.class){
-            return LocalDate.parse(string);
-        }
-        if (classe == LocalDateTime.class){
-            return LocalDateTime.parse(string);
-        }
-        return string;
-    }
-
-    private Object getParameterValue(HashMap<String, String> requestParameters, HashMap<String, Part> parts, Parameter functionParameter, String nameParameter, Session session) throws Exception {
+    private Object getParameterValue(Map<String, Object> requestParameters, HashMap<String, Part> parts, Parameter functionParameter, String nameParameter, Session session) throws Exception {
         Class<?> classe = functionParameter.getType();
         if (classe.isPrimitive() || classe == String.class) {
             if (functionParameter.isAnnotationPresent(Param.class)) {
                 Param param = functionParameter.getAnnotation(Param.class);
-                return getStringValueByClass(functionParameter.getType(), requestParameters.get(param.name()));
+                return getStringValueByClass(functionParameter.getType(), (String) requestParameters.get(param.name()));
             }
             throw new ParamNotFoundException();
         } else if (classe == Session.class) {
             return session;
+        } else if (classe == Map.class){
+            return requestParameters;
         }
         if (functionParameter.isAnnotationPresent(WinterFile.class)) {
             WinterFile winterFile = functionParameter.getAnnotation(WinterFile.class);
@@ -208,7 +184,9 @@ public class Mapping {
         }
         Constructor<?> constructor = classe.getConstructor();
         Object valiny = constructor.newInstance();
-        setValue(valiny, requestParameters, name);
+        if(requestParameters.containsKey(name)){
+            setValue(valiny, (Map<String,Object>)requestParameters.get(name));
+        }
         List<ValidationException> validationException = Validator.validate(valiny);
         if (validationException.size() != 0) {
             throw new ListValidationException(validationException, valiny, name);
@@ -216,7 +194,7 @@ public class Mapping {
         return valiny;
     }
 
-    private static void setValue(Object object, HashMap<String, String> requestParameters, String name) {
+    private static void setValue(Object object, Map<String, Object> requestParameters) {
         Field[] fields = object.getClass().getDeclaredFields();
         Set<String> keys = requestParameters.keySet();
         Method[] setters = object.getClass().getMethods();
@@ -227,17 +205,14 @@ public class Mapping {
                 attribut = attributAnnotation.name();
             }
             for (String key : keys) {
-                if (key.contains(name + ".")) {
-                    String attributRequest = key.split("[.]")[1];
-                    if (attributRequest.compareTo(attribut) == 0) {
-                        setValue(object, requestParameters.get(key), setters, fields[i]);
-                    }
+                if (key.equals(attribut)) {
+                    setValue(object, requestParameters.get(key), setters, fields[i]);
                 }
             }
         }
     }
 
-    private static Method getSetter(Object object, Method[] setters, Field champ) throws Exception {
+    private static Method getSetter(Method[] setters, Field champ) throws Exception {
         String attribut = champ.getName();
         String nameSetter = "set" + attribut.substring(0, 1).toUpperCase() + attribut.substring(1);
         for (int i = 0; i < setters.length; i++) {
@@ -248,14 +223,44 @@ public class Mapping {
         throw new Exception("erreur");
     }
 
-    private static void setValue(Object object, String value, Method[] setters, Field attribut) {
+    private static void setValue(Object object, Object value, Method[] setters, Field attribut) {
         try {
-            Method setter = getSetter(object, setters, attribut);
+            Method setter = getSetter(setters, attribut);
             Parameter[] parameter = setter.getParameters();
             Object valeur = getStringValueByClass(parameter[0].getType(), value);
             setter.invoke(object, valeur);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private static Object getStringValueByClass(Class<?> classe, Object string) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        if (classe == int.class) {
+            return Integer.parseInt((String) string);
+        }
+        else if (classe == double.class) {
+            return Double.parseDouble((String) string);
+        }
+        else if (classe == float.class) {
+            return Float.parseFloat((String) string);
+        }
+        else if (classe == Long.class) {
+            return Long.parseLong((String) string);
+        }
+        else if (classe == LocalDate.class) {
+            return LocalDate.parse((String) string);
+        }
+        else if (classe == LocalDateTime.class) {
+            return LocalDateTime.parse((String) string);
+        }
+        else if (classe == String.class){
+            return string;
+        }
+        else {
+            Constructor<?> constructor = classe.getConstructor();
+            Object valiny = constructor.newInstance();
+            setValue(valiny, (Map<String, Object>) string);
+            return valiny;
         }
     }
 }
