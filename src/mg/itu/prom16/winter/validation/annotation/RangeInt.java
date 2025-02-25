@@ -9,7 +9,7 @@ import mg.itu.prom16.winter.validation.generic.annotation.PointerValidator;
 import mg.itu.prom16.winter.validation.validator.RangeIntValidator;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
+@Target({ElementType.FIELD,ElementType.PARAMETER})
 @PointerValidator(RangeIntValidator.class)
 public @interface RangeInt {
     int min() default Integer.MIN_VALUE;

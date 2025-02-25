@@ -22,7 +22,6 @@ import mg.itu.prom16.winter.exception.running.ParamNotFoundException;
 import mg.itu.prom16.winter.validation.generic.Validator;
 import mg.itu.prom16.winter.validation.generic.exception.ListValidationException;
 import mg.itu.prom16.winter.validation.generic.exception.ValidationException;
-import mg.itu.prom16.winter.Session;
 
 public class Mapping {
     Class<?> controller;
@@ -31,6 +30,13 @@ public class Mapping {
     public Mapping(Class<?> classe, Method method) {
         this.setController(classe);
         this.setMethod(method);
+    }
+
+    public mg.itu.prom16.winter.enumeration.Verb getVerb(){
+        if(this.method.isAnnotationPresent(Get.class)){
+            return mg.itu.prom16.winter.enumeration.Verb.GET;
+        }
+        return mg.itu.prom16.winter.enumeration.Verb.POST;
     }
 
     public Class<?> getController() {
@@ -165,7 +171,12 @@ public class Mapping {
         if (classe.isPrimitive() || classe == String.class) {
             if (functionParameter.isAnnotationPresent(Param.class)) {
                 Param param = functionParameter.getAnnotation(Param.class);
-                return getStringValueByClass(functionParameter.getType(), (String) requestParameters.get(param.name()));
+                Object value=getStringValueByClass(functionParameter.getType(), (String) requestParameters.get(param.name()));
+                Set<ValidationException> lists=Validator.validate(value,functionParameter);
+                if (lists.size() != 0) {
+                    throw new ListValidationException(lists, value, param.name());
+                }
+                return value;
             }
             throw new ParamNotFoundException();
         } else if (classe == Session.class) {
@@ -187,7 +198,9 @@ public class Mapping {
         if(requestParameters.containsKey(name)){
             setValue(valiny, (Map<String,Object>)requestParameters.get(name));
         }
-        List<ValidationException> validationException = Validator.validate(valiny);
+        System.out.println("VITA");
+        Set<ValidationException> validationException = Validator.validate(valiny);
+        validationException.addAll(Validator.validate(valiny,functionParameter));
         if (validationException.size() != 0) {
             throw new ListValidationException(validationException, valiny, name);
         }

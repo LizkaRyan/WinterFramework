@@ -2,6 +2,7 @@ package mg.itu.prom16.winter.validation.generic.exception;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import mg.itu.prom16.winter.ModelAndView;
 import mg.itu.prom16.winter.exception.WinterException;
@@ -10,9 +11,9 @@ public class ListValidationException extends WinterException {
     List<ValidationException> validations;
     Object object;
     String nameAttribut;
-    public ListValidationException(List<ValidationException> listValidation,Object object,String nameAttribut){
+    public ListValidationException(Set<ValidationException> listValidation, Object object, String nameAttribut){
         super("Erreur lors de la validation");
-        this.validations=listValidation;
+        this.validations=listValidation.stream().toList();
         this.object=object;
         this.nameAttribut=nameAttribut;
     }
@@ -68,4 +69,6 @@ public class ListValidationException extends WinterException {
         modelAndView.addObject("error."+nameAttribut, object);
         modelAndView.addObject("error.messages", this.getListMessages());
     }
+
+
 }

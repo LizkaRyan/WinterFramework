@@ -384,6 +384,7 @@ public class TestController {
     - `RangeInt(min,max,field)`
     - `Required`
     - `RangeDouble(min,max,field)`
+    - `Email`
 
 Controller:
 

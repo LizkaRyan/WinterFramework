@@ -1,8 +1,7 @@
 package mg.itu.prom16.winter.validation.annotation;
 
 import mg.itu.prom16.winter.validation.generic.annotation.PointerValidator;
-import mg.itu.prom16.winter.validation.validator.RangeDoubleValidator;
-import mg.itu.prom16.winter.validation.validator.RangeIntValidator;
+import mg.itu.prom16.winter.validation.validator.EmailValidator;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -11,9 +10,6 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD,ElementType.PARAMETER})
-@PointerValidator(RangeDoubleValidator.class)
-public @interface RangeDouble {
-    int min() default Integer.MIN_VALUE;
-    int max() default Integer.MAX_VALUE;
-    String field();
+@PointerValidator(EmailValidator.class)
+public @interface Email {
 }

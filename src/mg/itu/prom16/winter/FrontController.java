@@ -183,7 +183,7 @@ public class FrontController extends HttpServlet{
         }
     }
 
-    protected void executeMethod(HttpServletRequest request,HttpServletResponse response,Verb methodUsed)throws IOException{
+    protected void executeMethod(HttpServletRequest request, HttpServletResponse response,Verb methodUsed)throws IOException{
         String url = getRequest(request.getRequestURI());
         if(url.startsWith(staticFileDirectory+"/")){
             serveStaticResource(url,response);
@@ -198,13 +198,10 @@ public class FrontController extends HttpServlet{
             return;
         }
         executeMethod(request, response,mapping,out);
-        HttpSession session=request.getSession();
-        session.setAttribute("winter.url",url);
-        session.setAttribute("winter.verb",methodUsed);
         out.close();
     }
 
-    protected Mapping getMapping(String url,Verb verb)throws WinterException{
+    protected Mapping getMapping(String url, Verb verb)throws WinterException{
         HashMap<String,Mapping> hashmapping = hashMap.get(verb);
         Mapping mapping=hashmapping.get(url);
         if(mapping==null){
@@ -241,6 +238,9 @@ public class FrontController extends HttpServlet{
                     out.println(object);
                 }
             }
+            HttpSession session=request.getSession();
+            session.setAttribute("winter.url",mapping.getUrl());
+            session.setAttribute("winter.verb",mapping.getVerb());
         } catch (AuthenticationException e){
             String redirect="redirect:";
             if(e.getMessage().startsWith(redirect)){
@@ -278,13 +278,13 @@ public class FrontController extends HttpServlet{
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        executeMethod(request,response,Verb.GET);
+        executeMethod(request,response, Verb.GET);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        executeMethod(request,response,Verb.POST);
+        executeMethod(request,response, Verb.POST);
     }
 
     protected static Map<String,Object> getParameters(HttpServletRequest request){
