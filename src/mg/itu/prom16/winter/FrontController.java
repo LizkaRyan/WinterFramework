@@ -2,6 +2,7 @@ package mg.itu.prom16.winter;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.io.File;
 import java.io.IOException;
@@ -198,9 +199,6 @@ public class FrontController extends HttpServlet{
             return;
         }
         executeMethod(request, response,mapping,out);
-        HttpSession session=request.getSession();
-        session.setAttribute("winter.url",url);
-        session.setAttribute("winter.verb",methodUsed);
         out.close();
     }
 
@@ -241,6 +239,9 @@ public class FrontController extends HttpServlet{
                     out.println(object);
                 }
             }
+            HttpSession session=request.getSession();
+            session.setAttribute("winter.url",mapping.getUrl());
+            session.setAttribute("winter.verb",mapping.getVerb());
         } catch (AuthenticationException e){
             String redirect="redirect:";
             if(e.getMessage().startsWith(redirect)){

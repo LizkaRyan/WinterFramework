@@ -10,7 +10,7 @@ import mg.itu.prom16.winter.validation.validator.RequiredValidator;
 
 @PointerValidator(RequiredValidator.class)
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
+@Target({ElementType.FIELD,ElementType.PARAMETER})
 public @interface Required {
     String message() default "Une contrainte non null a ete levee";
 }
