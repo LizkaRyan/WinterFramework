@@ -6,6 +6,7 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Set;
 
 import mg.itu.prom16.winter.validation.generic.exception.ValidationException;
 
@@ -24,7 +25,7 @@ public abstract class CustomValidator<A extends Annotation,T> {
         }
     }
 
-    void validate(Object o,List<ValidationException> answer)throws Exception{
+    void validate(Object o,Set<ValidationException> answer)throws Exception{
         Field[] fields=o.getClass().getDeclaredFields();
         for (Field field : fields) {
             if (field.isAnnotationPresent(this.annotationClass)) {
@@ -38,7 +39,7 @@ public abstract class CustomValidator<A extends Annotation,T> {
         }
     }
 
-    void validate(Object o, List<ValidationException> answer,Parameter parameter){
+    void validate(Object o, Set<ValidationException> answer, Parameter parameter){
         Annotation annotation = parameter.getAnnotation(this.annotationClass);
         ValidationException exception = this.validate(this.typeObject.cast(o), this.annotationClass.cast(annotation));
         if(exception!=null){

@@ -2,7 +2,6 @@ package mg.itu.prom16.winter;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.io.File;
 import java.io.IOException;
@@ -184,7 +183,7 @@ public class FrontController extends HttpServlet{
         }
     }
 
-    protected void executeMethod(HttpServletRequest request,HttpServletResponse response,Verb methodUsed)throws IOException{
+    protected void executeMethod(HttpServletRequest request, HttpServletResponse response,Verb methodUsed)throws IOException{
         String url = getRequest(request.getRequestURI());
         if(url.startsWith(staticFileDirectory+"/")){
             serveStaticResource(url,response);
@@ -202,7 +201,7 @@ public class FrontController extends HttpServlet{
         out.close();
     }
 
-    protected Mapping getMapping(String url,Verb verb)throws WinterException{
+    protected Mapping getMapping(String url, Verb verb)throws WinterException{
         HashMap<String,Mapping> hashmapping = hashMap.get(verb);
         Mapping mapping=hashmapping.get(url);
         if(mapping==null){
@@ -279,13 +278,13 @@ public class FrontController extends HttpServlet{
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        executeMethod(request,response,Verb.GET);
+        executeMethod(request,response, Verb.GET);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        executeMethod(request,response,Verb.POST);
+        executeMethod(request,response, Verb.POST);
     }
 
     protected static Map<String,Object> getParameters(HttpServletRequest request){

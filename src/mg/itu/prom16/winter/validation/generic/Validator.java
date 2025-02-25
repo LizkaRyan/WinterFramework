@@ -33,22 +33,22 @@ public final class Validator {
         }
     }
 
-    public static List<ValidationException> validate(Object o)throws Exception{
+    public static Set<ValidationException> validate(Object o)throws Exception{
         return validate(getCustomValidators(o),o);
     }
 
-    public static List<ValidationException> validate(Object o, Parameter parameter)throws Exception{
+    public static Set<ValidationException> validate(Object o, Parameter parameter)throws Exception{
         Set<CustomValidator<?,?>> customValidators=new HashSet<>();
         getCustomValidators(parameter.getAnnotations(),customValidators);
-        List<ValidationException> answer=new ArrayList<>();
+        Set<ValidationException> answer=new HashSet<>();
         for (CustomValidator<?,?> customValidator : customValidators) {
             customValidator.validate(o,answer,parameter);
         }
         return answer;
     }
 
-    public static List<ValidationException> validate(Set<CustomValidator<?,?>> validators,Object o)throws Exception{
-        List<ValidationException> answer=new ArrayList<ValidationException>();
+    public static Set<ValidationException> validate(Set<CustomValidator<?,?>> validators,Object o)throws Exception{
+        Set<ValidationException> answer=new HashSet<>();
         for (CustomValidator<?,?> customValidator : validators) {
             customValidator.validate(o,answer);
         }

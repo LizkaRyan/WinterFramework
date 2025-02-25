@@ -17,13 +17,11 @@ import mg.itu.prom16.winter.annotation.type.Controller;
 import mg.itu.prom16.winter.annotation.type.RestController;
 import mg.itu.prom16.winter.authentication.Authenticate;
 import mg.itu.prom16.winter.authentication.Authenticator;
-import mg.itu.prom16.winter.enumeration.Verb;
 import mg.itu.prom16.winter.exception.running.ParamInjectionNotFoundException;
 import mg.itu.prom16.winter.exception.running.ParamNotFoundException;
 import mg.itu.prom16.winter.validation.generic.Validator;
 import mg.itu.prom16.winter.validation.generic.exception.ListValidationException;
 import mg.itu.prom16.winter.validation.generic.exception.ValidationException;
-import mg.itu.prom16.winter.Session;
 
 public class Mapping {
     Class<?> controller;
@@ -34,11 +32,11 @@ public class Mapping {
         this.setMethod(method);
     }
 
-    public Verb getVerb(){
+    public mg.itu.prom16.winter.enumeration.Verb getVerb(){
         if(this.method.isAnnotationPresent(Get.class)){
-            return Verb.GET;
+            return mg.itu.prom16.winter.enumeration.Verb.GET;
         }
-        return Verb.POST;
+        return mg.itu.prom16.winter.enumeration.Verb.POST;
     }
 
     public Class<?> getController() {
@@ -171,12 +169,10 @@ public class Mapping {
     private Object getParameterValue(Map<String, Object> requestParameters, HashMap<String, Part> parts, Parameter functionParameter, String nameParameter, Session session) throws Exception {
         Class<?> classe = functionParameter.getType();
         if (classe.isPrimitive() || classe == String.class) {
-            System.out.println("Primitive");
             if (functionParameter.isAnnotationPresent(Param.class)) {
                 Param param = functionParameter.getAnnotation(Param.class);
                 Object value=getStringValueByClass(functionParameter.getType(), (String) requestParameters.get(param.name()));
-                System.out.println("Validation");
-                List<ValidationException> lists=Validator.validate(value,functionParameter);
+                Set<ValidationException> lists=Validator.validate(value,functionParameter);
                 if (lists.size() != 0) {
                     throw new ListValidationException(lists, value, param.name());
                 }
@@ -202,7 +198,8 @@ public class Mapping {
         if(requestParameters.containsKey(name)){
             setValue(valiny, (Map<String,Object>)requestParameters.get(name));
         }
-        List<ValidationException> validationException = Validator.validate(valiny);
+        System.out.println("VITA");
+        Set<ValidationException> validationException = Validator.validate(valiny);
         validationException.addAll(Validator.validate(valiny,functionParameter));
         if (validationException.size() != 0) {
             throw new ListValidationException(validationException, valiny, name);
