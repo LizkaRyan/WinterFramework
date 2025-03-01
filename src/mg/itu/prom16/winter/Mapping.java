@@ -22,6 +22,7 @@ import mg.itu.prom16.winter.exception.running.ParamNotFoundException;
 import mg.itu.prom16.winter.validation.generic.Validator;
 import mg.itu.prom16.winter.validation.generic.exception.ListValidationException;
 import mg.itu.prom16.winter.validation.generic.exception.ValidationException;
+import mg.itu.prom16.winter.enumeration.Verb;
 
 public class Mapping {
     Class<?> controller;
@@ -32,11 +33,11 @@ public class Mapping {
         this.setMethod(method);
     }
 
-    public mg.itu.prom16.winter.enumeration.Verb getVerb(){
+    public Verb getVerb(){
         if(this.method.isAnnotationPresent(Get.class)){
-            return mg.itu.prom16.winter.enumeration.Verb.GET;
+            return Verb.GET;
         }
-        return mg.itu.prom16.winter.enumeration.Verb.POST;
+        return Verb.POST;
     }
 
     public Class<?> getController() {
@@ -109,7 +110,7 @@ public class Mapping {
         return valiny;
     }
 
-    protected Authenticate getAuthentication(Class<?> authentification) {
+    public Authenticate getAuthentication(Class<?> authentification) {
         if (this.getMethod().isAnnotationPresent(Authenticate.class)) {
             return this.getMethod().getAnnotation(Authenticate.class);
         }
@@ -120,7 +121,7 @@ public class Mapping {
     }
 
 
-    public void authenticate(Session session) throws Exception {
+    public void authenticate(Session session,String url) throws Exception {
         Authenticate authenticate = this.getAuthentication(Authenticate.class);
         if (authenticate == null) {
             return;
@@ -131,6 +132,8 @@ public class Mapping {
         for (int i = 0; i < classesParameter.length; i++) {
             if (classesParameter[i] == Session.class) {
                 parameter[i] = session;
+            } else if (classesParameter[i] == String.class) {
+                parameter[i] = url;
             } else {
                 throw new ParamInjectionNotFoundException();
             }
@@ -139,8 +142,8 @@ public class Mapping {
         authenticator.authentificate();
     }
 
-    public Object invokeMethod(Map<String, Object> requestParameters, HashMap<String, Part> parts, mg.itu.prom16.winter.Session session) throws Exception {
-        this.authenticate(session);
+    public Object invokeMethod(Map<String, Object> requestParameters, HashMap<String, Part> parts, Session session,String url) throws Exception {
+        this.authenticate(session,url);
         Object obj = this.getControllerInstance(session);
         String[] parameterNames = this.getParameterName();
         Parameter[] functionParameters = this.method.getParameters();
@@ -198,7 +201,6 @@ public class Mapping {
         if(requestParameters.containsKey(name)){
             setValue(valiny, (Map<String,Object>)requestParameters.get(name));
         }
-        System.out.println("VITA");
         Set<ValidationException> validationException = Validator.validate(valiny);
         validationException.addAll(Validator.validate(valiny,functionParameter));
         if (validationException.size() != 0) {

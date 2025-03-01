@@ -1,7 +1,7 @@
 package mg.itu.prom16.winter.exception.initializing;
 
-import mg.itu.prom16.winter.exception.WinterException;
 import mg.itu.prom16.winter.Mapping;
+import mg.itu.prom16.winter.exception.WinterException;
 
 public class DuplicatedUrlException extends WinterException {
     public DuplicatedUrlException(String url,Mapping mapping1,Mapping mapping2){

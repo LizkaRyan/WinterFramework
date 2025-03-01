@@ -17,6 +17,6 @@ public class ValidationException extends WinterException {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.getMessage()); // Génère un code de hachage basé sur les champs
+        return Objects.hash(this.getMessage());
     }
 }
