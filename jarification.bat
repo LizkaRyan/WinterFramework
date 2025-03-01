@@ -7,7 +7,7 @@ set "projet=framework"
 rem Définir le chemin d'accès au répertoire des sources et au répertoire de destination des fichiers compilés
 set "src=.\src"
 set "bin=.\bin"
-set "LibTestDestination=C:\Users\ryrab\Desktop\Ryan\Etudes\S5\ArchitectureLogiciel\temoin\lib"
+set "LibTestDestination=C:\Users\ryrab\Desktop\Ryan\Etudes\S6\Ticketing\lib"
 
 rem Chemin vers le répertoire contenant les bibliothèques nécessaires
 set "libDirectory=.\lib"

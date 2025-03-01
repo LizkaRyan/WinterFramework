@@ -504,7 +504,7 @@ controller.
 
 Here is how you make it:
 
-#### Step 1) Create a class that implements `Authenticator`. If your authentication needs session you put `Session` in the constructor
+#### Step 1) Create a class that implements `Authenticator`. If your authentication needs session you put `Session` in the constructor. If you needs the url wanted by the user you put a `String` in the constructor
 
 ```java
 import mg.itu.prom16.Session;
@@ -514,9 +514,12 @@ import mg.itu.prom16.winter.authentication.Authenticator;
 public class StudentAuthenticator implements Authenticator {
 
     Session session;
+    
+    String url;
 
-    public StudentAuthenticator(Session session) {
+    public StudentAuthenticator(Session session,String url) {
         this.session = session;
+        this.url=url;
     }
 
     @Override

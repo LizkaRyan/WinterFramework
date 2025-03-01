@@ -259,7 +259,6 @@ public class FrontController extends HttpServlet{
                     verb=ifNotValidated.verb();
                 }
                 Mapping erreur=getMapping(url,verb);
-                System.out.println(url);
                 ModelAndView modelAndView=(ModelAndView)normalController(request, response, erreur);
                 e.setError(modelAndView);
                 makeRequestDispatcher(modelAndView, request).forward(request,response);
@@ -350,7 +349,8 @@ public class FrontController extends HttpServlet{
     }
     protected void restController(HttpServletRequest request,HttpServletResponse response,Mapping mapping,PrintWriter out)throws Exception{
         response.setContentType("application/json;charset=UTF-8");
-        Object methodReturn=mapping.invokeMethod(getParameters(request),getParts(request),new Session(request.getSession()));
+        String url = getRequest(request.getRequestURI());
+        Object methodReturn=mapping.invokeMethod(getParameters(request),getParts(request),new Session(request.getSession()),url);
         String json="";
         if(methodReturn instanceof ModelAndView modelAndView){
             json=new Gson().toJson(modelAndView.getObjects());
@@ -364,6 +364,7 @@ public class FrontController extends HttpServlet{
     
     protected Object normalController(HttpServletRequest request,HttpServletResponse response,Mapping mapping)throws Exception{
         response.setContentType("text/html;charset=UTF-8");
-        return mapping.invokeMethod(getParameters(request),getParts(request),new Session(request.getSession()));
+        String url = getRequest(request.getRequestURI());
+        return mapping.invokeMethod(getParameters(request),getParts(request),new Session(request.getSession()),url);
     }
 }
