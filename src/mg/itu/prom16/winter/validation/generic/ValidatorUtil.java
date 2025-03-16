@@ -3,15 +3,12 @@ package mg.itu.prom16.winter.validation.generic;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Parameter;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import mg.itu.prom16.winter.validation.generic.annotation.PointerValidator;
-import mg.itu.prom16.winter.validation.generic.exception.ValidationException;
 
-public final class Validator {
+public final class ValidatorUtil {
     
     public static Set<CustomValidator<?,?>> getCustomValidators(Object object)throws Exception{
         Field[] fields=object.getClass().getDeclaredFields();
@@ -37,12 +34,12 @@ public final class Validator {
         return validate(getCustomValidators(o),o);
     }
 
-    public static Set<ValidationException> validate(Object o, Parameter parameter)throws Exception{
+    public static Set<ValidationException> validate(Object o, Parameter parameter,String name)throws Exception{
         Set<CustomValidator<?,?>> customValidators=new HashSet<>();
         getCustomValidators(parameter.getAnnotations(),customValidators);
         Set<ValidationException> answer=new HashSet<>();
         for (CustomValidator<?,?> customValidator : customValidators) {
-            customValidator.validate(o,answer,parameter);
+            customValidator.validate(o,answer,parameter,name);
         }
         return answer;
     }

@@ -6,6 +6,7 @@ import java.util.Set;
 
 import mg.itu.prom16.winter.ModelAndView;
 import mg.itu.prom16.winter.exception.WinterException;
+import mg.itu.prom16.winter.validation.generic.ValidationException;
 
 public class ListValidationException extends WinterException {
     List<ValidationException> validations;
@@ -17,6 +18,11 @@ public class ListValidationException extends WinterException {
         this.object=object;
         this.nameAttribut=nameAttribut;
     }
+
+    public List<ValidationException> getValidations(){
+        return validations;
+    }
+
     @Override
     public String generateWeb(){
         String valiny="";

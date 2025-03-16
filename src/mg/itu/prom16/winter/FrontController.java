@@ -30,9 +30,7 @@ import mg.itu.prom16.winter.exception.initializing.PackageXmlNotFoundException;
 import mg.itu.prom16.winter.exception.initializing.ReturnTypeException;
 import mg.itu.prom16.winter.exception.running.MethodException;
 import mg.itu.prom16.winter.exception.running.UrlNotFoundException;
-import mg.itu.prom16.winter.validation.generic.exception.ListValidationException;
 import mg.itu.prom16.winter.authentication.AuthenticationException;
-import mg.itu.prom16.winter.validation.generic.annotation.IfNotValidated;
 
 @MultipartConfig
 public class FrontController extends HttpServlet{
@@ -145,11 +143,6 @@ public class FrontController extends HttpServlet{
 
     public void testMappingException(Mapping newMapping,HashMap<String,Mapping> mapping,String url)throws DuplicatedUrlException,ReturnTypeException{
         Method method=newMapping.getMethod();
-        if(!newMapping.isRest()){
-            if(!(method.getReturnType()==String.class || method.getReturnType()==ModelAndView.class)){
-                throw new ReturnTypeException(newMapping);
-            }
-        }
         Mapping mappingExists=mapping.get(url);
         if(mappingExists!=null){
             throw new DuplicatedUrlException(url, mappingExists,newMapping);
@@ -237,6 +230,9 @@ public class FrontController extends HttpServlet{
                     }
                     out.println(object);
                 }
+                else{
+                    throw new ReturnTypeException(mapping);
+                }
             }
             HttpSession session=request.getSession();
             session.setAttribute("winter.url",mapping.getUrl());
@@ -248,24 +244,7 @@ public class FrontController extends HttpServlet{
                 return;
             }
             out.println(e.generateWeb());
-        } catch(ListValidationException e){
-            try {
-                HttpSession session=request.getSession();
-                String url=(String)session.getAttribute("winter.url");
-                Verb verb=(Verb)session.getAttribute("winter.verb");
-                if (mapping.getMethod().isAnnotationPresent(IfNotValidated.class)) {
-                    IfNotValidated ifNotValidated=mapping.getMethod().getAnnotation(IfNotValidated.class);
-                    url= ifNotValidated.url();
-                    verb=ifNotValidated.verb();
-                }
-                Mapping erreur=getMapping(url,verb);
-                ModelAndView modelAndView=(ModelAndView)normalController(request, response, erreur);
-                e.setError(modelAndView);
-                makeRequestDispatcher(modelAndView, request).forward(request,response);
-            } catch (Exception ex) {
-                out.println(WinterException.generateWeb(ex));
-            }
-        } 
+        }
         catch (WinterException e) {
             out.println(e.generateWeb());
         }

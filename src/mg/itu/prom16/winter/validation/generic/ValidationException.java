@@ -1,12 +1,23 @@
-package mg.itu.prom16.winter.validation.generic.exception;
+package mg.itu.prom16.winter.validation.generic;
 
 import mg.itu.prom16.winter.exception.WinterException;
 
 import java.util.Objects;
 
 public class ValidationException extends WinterException {
+
+    String field;
+
     public ValidationException(String message){
         super("Erreur de validation: "+message);
+    }
+
+    public String getField(){
+        return this.field;
+    }
+
+    void setField(String field){
+        this.field=field;
     }
 
     @Override
