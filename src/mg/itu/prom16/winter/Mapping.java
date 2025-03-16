@@ -19,9 +19,9 @@ import mg.itu.prom16.winter.authentication.Authenticate;
 import mg.itu.prom16.winter.authentication.Authenticator;
 import mg.itu.prom16.winter.exception.running.ParamInjectionNotFoundException;
 import mg.itu.prom16.winter.exception.running.ParamNotFoundException;
-import mg.itu.prom16.winter.validation.generic.Validator;
+import mg.itu.prom16.winter.validation.generic.ValidatorUtil;
 import mg.itu.prom16.winter.validation.generic.exception.ListValidationException;
-import mg.itu.prom16.winter.validation.generic.exception.ValidationException;
+import mg.itu.prom16.winter.validation.generic.ValidationException;
 import mg.itu.prom16.winter.enumeration.Verb;
 
 public class Mapping {
@@ -148,8 +148,20 @@ public class Mapping {
         String[] parameterNames = this.getParameterName();
         Parameter[] functionParameters = this.method.getParameters();
         List<Object> parametersValue = new ArrayList<Object>();
+        Validator validator=new Validator();
         for (int i = 0; i < functionParameters.length; i++) {
             parametersValue.add(getParameterValue(requestParameters, parts, functionParameters[i], parameterNames[i], session));
+            ListValidationException validationExceptions= (ListValidationException) session.get("winter.validation");
+            if(validationExceptions!=null){
+                validator.addExceptions(validationExceptions);
+                session.remove("winter.validation");
+            }
+        }
+        for (int i = 0; i < functionParameters.length; i++) {
+            if(functionParameters[i].getType()==Validator.class){
+                parametersValue.remove(i);
+                parametersValue.add(i,validator);
+            }
         }
         Object[] parameterValues = parametersValue.toArray();
         return method.invoke(obj, parameterValues);
@@ -171,11 +183,14 @@ public class Mapping {
 
     private Object getParameterValue(Map<String, Object> requestParameters, HashMap<String, Part> parts, Parameter functionParameter, String nameParameter, Session session) throws Exception {
         Class<?> classe = functionParameter.getType();
+        if(classe==Validator.class){
+            return null;
+        }
         if (classe.isPrimitive() || classe == String.class) {
             if (functionParameter.isAnnotationPresent(Param.class)) {
                 Param param = functionParameter.getAnnotation(Param.class);
                 Object value=getStringValueByClass(functionParameter.getType(), (String) requestParameters.get(param.name()));
-                Set<ValidationException> lists=Validator.validate(value,functionParameter);
+                Set<ValidationException> lists= ValidatorUtil.validate(value,functionParameter,param.name());
                 if (lists.size() != 0) {
                     throw new ListValidationException(lists, value, param.name());
                 }
@@ -201,10 +216,10 @@ public class Mapping {
         if(requestParameters.containsKey(name)){
             setValue(valiny, (Map<String,Object>)requestParameters.get(name));
         }
-        Set<ValidationException> validationException = Validator.validate(valiny);
-        validationException.addAll(Validator.validate(valiny,functionParameter));
+        Set<ValidationException> validationException = ValidatorUtil.validate(valiny);
+        validationException.addAll(ValidatorUtil.validate(valiny,functionParameter,name));
         if (validationException.size() != 0) {
-            throw new ListValidationException(validationException, valiny, name);
+            session.add("winter.validation",new ListValidationException(validationException, valiny, name));
         }
         return valiny;
     }

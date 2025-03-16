@@ -393,7 +393,6 @@ import mg.itu.prom16.winter.ModelAndView;
 import mg.itu.prom16.winter.annotation.method.Get;
 import mg.itu.prom16.winter.annotation.parameter.Param;
 import mg.itu.prom16.winter.annotation.type.Controller;
-import mg.itu.prom16.winter.validation.generic.annotation.IfNotValidated;
 
 @Controller
 public class TestController {
@@ -404,7 +403,6 @@ public class TestController {
     }
 
     @Get("/employee")
-    @IfNotValidated("/form")
     public ModelAndView employeeGet(@Param("employee") Employee emp) {
         ModelAndView modelAndView = new ModelAndView("employee.jsp");
         modelAndView.addObject("emp", emp);
@@ -464,10 +462,9 @@ public @interface NotBlank {
   is `@NotBlank` and T is the type of the object which is String in our case.
 
 ```java
-import mg.itu.prom16.winter.validation.annotation.RangeInt;
-import mg.itu.prom16.winter.validation.exception.RangeIntException;
+
 import mg.itu.prom16.winter.validation.generic.CustomValidator;
-import mg.itu.prom16.winter.validation.generic.exception.ValidationException;
+import mg.itu.prom16.winter.validation.generic.ValidationException;
 
 public class NotBlankValidator extends CustomValidator<NotBlank, String> {
 

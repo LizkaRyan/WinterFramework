@@ -3,7 +3,7 @@ package mg.itu.prom16.winter.validation.validator;
 import mg.itu.prom16.winter.validation.annotation.RangeDouble;
 import mg.itu.prom16.winter.validation.exception.RangeDoubleException;
 import mg.itu.prom16.winter.validation.generic.CustomValidator;
-import mg.itu.prom16.winter.validation.generic.exception.ValidationException;
+import mg.itu.prom16.winter.validation.generic.ValidationException;
 
 public class RangeDoubleValidator extends CustomValidator<RangeDouble,Double> {
 
