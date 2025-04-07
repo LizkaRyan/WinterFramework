@@ -4,6 +4,8 @@ import java.lang.reflect.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.Part;
 
@@ -12,7 +14,7 @@ import mg.itu.prom16.winter.annotation.method.Get;
 import mg.itu.prom16.winter.annotation.method.Post;
 import mg.itu.prom16.winter.annotation.method.RestMethod;
 import mg.itu.prom16.winter.annotation.parameter.Param;
-import mg.itu.prom16.winter.annotation.parameter.WinterFile;
+import mg.itu.prom16.winter.annotation.WinterFile;
 import mg.itu.prom16.winter.annotation.type.Controller;
 import mg.itu.prom16.winter.annotation.type.RestController;
 import mg.itu.prom16.winter.authentication.Authenticate;
@@ -33,8 +35,8 @@ public class Mapping {
         this.setMethod(method);
     }
 
-    public Verb getVerb(){
-        if(this.method.isAnnotationPresent(Get.class)){
+    public Verb getVerb() {
+        if (this.method.isAnnotationPresent(Get.class)) {
             return Verb.GET;
         }
         return Verb.POST;
@@ -121,7 +123,7 @@ public class Mapping {
     }
 
 
-    public void authenticate(Session session,String url) throws Exception {
+    public void authenticate(Session session, String url) throws Exception {
         Authenticate authenticate = this.getAuthentication(Authenticate.class);
         if (authenticate == null) {
             return;
@@ -142,25 +144,25 @@ public class Mapping {
         authenticator.authentificate();
     }
 
-    public Object invokeMethod(Map<String, Object> requestParameters, HashMap<String, Part> parts, Session session,String url) throws Exception {
-        this.authenticate(session,url);
+    public Object invokeMethod(Map<String, Object> requestParameters, Map<String, Object> parts, Session session, String url) throws Exception {
+        this.authenticate(session, url);
         Object obj = this.getControllerInstance(session);
         String[] parameterNames = this.getParameterName();
         Parameter[] functionParameters = this.method.getParameters();
         List<Object> parametersValue = new ArrayList<Object>();
-        Validator validator=new Validator();
+        Validator validator = new Validator();
         for (int i = 0; i < functionParameters.length; i++) {
             parametersValue.add(getParameterValue(requestParameters, parts, functionParameters[i], parameterNames[i], session));
-            ListValidationException validationExceptions= (ListValidationException) session.get("winter.validation");
-            if(validationExceptions!=null){
+            ListValidationException validationExceptions = (ListValidationException) session.get("winter.validation");
+            if (validationExceptions != null) {
                 validator.addExceptions(validationExceptions);
                 session.remove("winter.validation");
             }
         }
         for (int i = 0; i < functionParameters.length; i++) {
-            if(functionParameters[i].getType()==Validator.class){
+            if (functionParameters[i].getType() == Validator.class) {
                 parametersValue.remove(i);
-                parametersValue.add(i,validator);
+                parametersValue.add(i, validator);
             }
         }
         Object[] parameterValues = parametersValue.toArray();
@@ -181,16 +183,16 @@ public class Mapping {
         return constructeur[0].newInstance(parameterValue);
     }
 
-    private Object getParameterValue(Map<String, Object> requestParameters, HashMap<String, Part> parts, Parameter functionParameter, String nameParameter, Session session) throws Exception {
+    private Object getParameterValue(Map<String, Object> requestParameters, Map<String, Object> parts, Parameter functionParameter, String nameParameter, Session session) throws Exception {
         Class<?> classe = functionParameter.getType();
-        if(classe==Validator.class){
+        if (classe == Validator.class) {
             return null;
         }
         if (classe.isPrimitive() || classe == String.class) {
             if (functionParameter.isAnnotationPresent(Param.class)) {
                 Param param = functionParameter.getAnnotation(Param.class);
-                Object value=getStringValueByClass(functionParameter.getType(), (String) requestParameters.get(param.name()));
-                Set<ValidationException> lists= ValidatorUtil.validate(value,functionParameter,param.name());
+                Object value = getStringValueByClass(functionParameter.getType(), (String) requestParameters.get(param.name()), parts);
+                Set<ValidationException> lists = ValidatorUtil.validate(value, functionParameter, param.name());
                 if (lists.size() != 0) {
                     throw new ListValidationException(lists, value, param.name());
                 }
@@ -199,8 +201,8 @@ public class Mapping {
             throw new ParamNotFoundException();
         } else if (classe == Session.class) {
             return session;
-        } else if (classe == Map.class){
-            return requestParameters;
+        } else if (classe == Map.class) {
+            return parts;
         }
         if (functionParameter.isAnnotationPresent(WinterFile.class)) {
             WinterFile winterFile = functionParameter.getAnnotation(WinterFile.class);
@@ -213,20 +215,21 @@ public class Mapping {
         }
         Constructor<?> constructor = classe.getConstructor();
         Object valiny = constructor.newInstance();
-        if(requestParameters.containsKey(name)){
-            setValue(valiny, (Map<String,Object>)requestParameters.get(name));
+        if (requestParameters.containsKey(name)) {
+            setValue(valiny, (Map<String, Object>) requestParameters.get(name),(Map<String, Object>)parts.get(name));
         }
         Set<ValidationException> validationException = ValidatorUtil.validate(valiny);
-        validationException.addAll(ValidatorUtil.validate(valiny,functionParameter,name));
+        validationException.addAll(ValidatorUtil.validate(valiny, functionParameter, name));
         if (validationException.size() != 0) {
-            session.add("winter.validation",new ListValidationException(validationException, valiny, name));
+            session.add("winter.validation", new ListValidationException(validationException, valiny, name));
         }
         return valiny;
     }
 
-    private static void setValue(Object object, Map<String, Object> requestParameters) {
+    private static void setValue(Object object, Map<String, Object> requestParameters,Map<String,Object> parts) throws Exception {
         Field[] fields = object.getClass().getDeclaredFields();
         Set<String> keys = requestParameters.keySet();
+        Set<String> keysPart = parts.keySet();
         Method[] setters = object.getClass().getMethods();
         for (int i = 0; i < fields.length; i++) {
             String attribut = fields[i].getName();
@@ -234,12 +237,57 @@ public class Mapping {
                 Attribut attributAnnotation = fields[i].getAnnotation(Attribut.class);
                 attribut = attributAnnotation.name();
             }
-            for (String key : keys) {
-                if (key.equals(attribut)) {
-                    setValue(object, requestParameters.get(key), setters, fields[i]);
+            if (fields[i].getType() == List.class) {
+                List list = new ArrayList();
+                String regex = "^" + attribut + "\\[\\d+\\]$";
+                Class<?> type = getTypeList(fields[i]);
+                Pattern pattern = Pattern.compile(regex);
+                for (String key : keys) {
+                    Matcher matcher = pattern.matcher(key);
+                    Object listObject=type.getConstructor().newInstance();
+                    if (matcher.matches()) {
+                        setValue(listObject,(Map<String,Object>)requestParameters.get(key),(Map<String,Object>)parts.get(key));
+                        list.add(listObject);
+                    }
+                }
+                Method setter = getSetter(setters, fields[i]);
+                setter.invoke(object,list);
+            } else if(fields[i].getType() == Part.class) {
+                for (String key : keysPart) {
+                    System.out.println(key+" "+attribut+" PART");
+                    if (key.equals(attribut)) {
+                        Method setter = getSetter(setters, fields[i]);
+                        setter.invoke(object,parts.get(key));
+                    }
+                }
+            } else {
+                for (String key : keys) {
+                    System.out.println(key+" "+attribut);
+                    if (key.equals(attribut)) {
+                        setValue(object, requestParameters.get(key), setters, fields[i],parts);
+                    }
                 }
             }
         }
+    }
+
+    public static Class<?> getTypeList(Field field) {
+        Type type = field.getGenericType();
+        ParameterizedType pType = (ParameterizedType) type;
+        Type[] typeArgs = pType.getActualTypeArguments();
+
+        Type arg = typeArgs[0];
+
+        if (arg instanceof WildcardType) {
+            WildcardType wildcard = (WildcardType) arg;
+            Type[] upperBounds = wildcard.getUpperBounds();
+
+            if (upperBounds.length > 0 && upperBounds[0] instanceof Class) {
+                return (Class<?>) upperBounds[0];
+            }
+        }
+
+        return (Class<?>) arg;
     }
 
     private static Method getSetter(Method[] setters, Field champ) throws Exception {
@@ -253,43 +301,40 @@ public class Mapping {
         throw new Exception("erreur");
     }
 
-    private static void setValue(Object object, Object value, Method[] setters, Field attribut) {
+    private static void setValue(Object object, Object value, Method[] setters, Field attribut,Object parts) {
         try {
             Method setter = getSetter(setters, attribut);
             Parameter[] parameter = setter.getParameters();
-            Object valeur = getStringValueByClass(parameter[0].getType(), value);
+            Object valeur = getStringValueByClass(parameter[0].getType(), value,parts);
             setter.invoke(object, valeur);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private static Object getStringValueByClass(Class<?> classe, Object string) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    private static Object getStringValueByClass(Class<?> classe, Object string,Object parts) throws Exception {
         if (classe == int.class) {
             return Integer.parseInt((String) string);
-        }
-        else if (classe == double.class) {
+        } else if (classe == double.class) {
             return Double.parseDouble((String) string);
-        }
-        else if (classe == float.class) {
+        } else if (classe == float.class) {
             return Float.parseFloat((String) string);
-        }
-        else if (classe == Long.class) {
+        } else if (classe == Long.class) {
             return Long.parseLong((String) string);
-        }
-        else if (classe == LocalDate.class) {
+        } else if (classe == LocalDate.class) {
             return LocalDate.parse((String) string);
-        }
-        else if (classe == LocalDateTime.class) {
+        } else if (classe == LocalDateTime.class) {
             return LocalDateTime.parse((String) string);
-        }
-        else if (classe == String.class){
+        } else if (classe == String.class || classe == Part.class) {
             return string;
-        }
-        else {
+        } else if (classe == List.class) {
+            List valiny=new ArrayList<>();
+            setValue(valiny, (Map<String, Object>) string,(Map<String,Object>)parts);
+            return valiny;
+        }else {
             Constructor<?> constructor = classe.getConstructor();
             Object valiny = constructor.newInstance();
-            setValue(valiny, (Map<String, Object>) string);
+            setValue(valiny, (Map<String, Object>) string,(Map<String,Object>)parts);
             return valiny;
         }
     }

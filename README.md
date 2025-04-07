@@ -176,7 +176,7 @@ public class TestController {
 
     @PostMapping("/user")
     public String createUser(@Param(name = "user") User user) {
-        return "Hello " + user.getFirstName() + " " + user.getLastName();
+        return "Hello " + user.getFirstName() + " " + user.getLastName() + " " + user.getIdentityCard().getMatriculation() + " and having " +user.getVehicles().size() + "vehicles";
     }
 }
 ```
@@ -184,11 +184,24 @@ public class TestController {
 User Class:
 
 ```java
+import java.time.LocalDate;
+
 public class User {
     private String firstName;
     private String lastName;
-
+    private IdentityCard identityCard;
+    private List<Vehicle> vehicles;
     // Getters and Setters
+}
+
+public class Vehicle {
+    String matriculation;
+    String model;
+}
+
+public class IdentityCard {
+    String matriculation;
+    LocalDate dateObtained;
 }
 ```
 
@@ -206,10 +219,8 @@ Example:
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import mg.itu.prom16.winter.ModelAndView;
 import mg.itu.prom16.winter.annotation.method.Post;
-import mg.itu.prom16.winter.annotation.parameter.Param;
-import mg.itu.prom16.winter.annotation.parameter.WinterFile;
+import mg.itu.prom16.winter.annotation.WinterFile;
 import mg.itu.prom16.winter.annotation.type.Controller;
 
 @Controller(mapping = "/test")
