@@ -286,6 +286,17 @@ public class FrontController extends HttpServlet{
         return nestedMap;
     }
 
+    public static Map<String, Object> convertToNestedMapPart(Map<String, Part> flatMap) {
+        Map<String, Object> nestedMap = new HashMap<>();
+
+        for (Map.Entry<String, Part> entry : flatMap.entrySet()) {
+            String[] keys = entry.getKey().split("\\.");
+            insertIntoNestedMap(nestedMap, keys, entry.getValue(), 0);
+        }
+
+        return nestedMap;
+    }
+
     @SuppressWarnings("unchecked")
     private static void insertIntoNestedMap(Map<String, Object> currentMap, String[] keys, Object value, int index) {
         String key = keys[index];
@@ -303,7 +314,7 @@ public class FrontController extends HttpServlet{
         insertIntoNestedMap(nextMap, keys, value, index + 1);
     }
 
-    protected static HashMap<String,Part> getParts(HttpServletRequest request)throws Exception{
+    protected static Map<String,Object> getParts(HttpServletRequest request)throws Exception{
         HashMap<String,Part> valiny=new HashMap<String,Part>();
         String contentType = request.getContentType();
         if(contentType!=null){
@@ -313,10 +324,12 @@ public class FrontController extends HttpServlet{
                     String partName = part.getName(); // Nom du champ dans le formulaire
                     valiny.put(partName, part);
                 }
-                return valiny;
             }
         }
-        return valiny;
+        if(valiny.isEmpty()){
+            return getParameters(request);
+        }
+        return convertToNestedMapPart(valiny);
     }
 
     protected static RequestDispatcher makeRequestDispatcher(ModelAndView modelAndView,HttpServletRequest request){
@@ -344,6 +357,7 @@ public class FrontController extends HttpServlet{
     protected Object normalController(HttpServletRequest request,HttpServletResponse response,Mapping mapping)throws Exception{
         response.setContentType("text/html;charset=UTF-8");
         String url = getRequest(request.getRequestURI());
-        return mapping.invokeMethod(getParameters(request),getParts(request),new Session(request.getSession()),url);
+        Map<String,Object> parts = getParts(request);
+        return mapping.invokeMethod(getParameters(request),parts,new Session(request.getSession()),url);
     }
 }
