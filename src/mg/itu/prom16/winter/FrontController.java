@@ -2,6 +2,8 @@ package mg.itu.prom16.winter;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.io.File;
 import java.io.IOException;
@@ -17,10 +19,12 @@ import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.*;
 
+import com.google.gson.GsonBuilder;
 import mg.itu.prom16.winter.annotation.method.Get;
 import mg.itu.prom16.winter.annotation.method.Post;
 import mg.itu.prom16.winter.annotation.type.Controller;
 import mg.itu.prom16.winter.annotation.type.RestController;
+import mg.itu.prom16.winter.download.DownloadableFile;
 import mg.itu.prom16.winter.enumeration.Verb;
 import mg.itu.prom16.winter.exception.WinterException;
 import mg.itu.prom16.winter.exception.initializing.DuplicatedUrlException;
@@ -31,6 +35,8 @@ import mg.itu.prom16.winter.exception.initializing.ReturnTypeException;
 import mg.itu.prom16.winter.exception.running.MethodException;
 import mg.itu.prom16.winter.exception.running.UrlNotFoundException;
 import mg.itu.prom16.winter.authentication.AuthenticationException;
+import mg.itu.prom16.winter.json.LocalDateAdapter;
+import mg.itu.prom16.winter.json.LocalDateTimeAdapter;
 
 @MultipartConfig
 public class FrontController extends HttpServlet{
@@ -229,8 +235,10 @@ public class FrontController extends HttpServlet{
                         return;
                     }
                     out.println(object);
-                }
-                else{
+                } else if (object instanceof DownloadableFile file) {
+                    file.setResponse(response);
+                    return;
+                } else{
                     throw new ReturnTypeException(mapping);
                 }
             }
@@ -348,7 +356,9 @@ public class FrontController extends HttpServlet{
             json=new Gson().toJson(modelAndView.getObjects());
         }
         else{
-            Gson gson=new Gson();
+            Gson gson=new GsonBuilder().registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+                    .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
+                    .create();
             json=gson.toJson(methodReturn);
         }
         out.println(json);
