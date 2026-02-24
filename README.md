@@ -174,7 +174,7 @@ import mg.itu.prom16.winter.annotation.type.Controller;
 @Controller(mapping = "/test")
 public class TestController {
 
-    @PostMapping("/user")
+    @Post("/user")
     public String createUser(@Param(name = "user") User user) {
         return "Hello " + user.getFirstName() + " " + user.getLastName() + " " + user.getIdentityCard().getMatriculation() + " and having " +user.getVehicles().size() + "vehicles";
     }
@@ -293,7 +293,7 @@ import mg.itu.prom16.winter.annotation.type.Controller;
 public class TestController {
 
     @RestMethod
-    @PostMapping("/user")
+    @Post("/user")
     public String createUser(@Param(name = "user") User user) {
         return user;
     }
